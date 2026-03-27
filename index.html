@@ -1662,12 +1662,16 @@ function vDetail() {
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
             Payments (${getPayments(c.id).length})
           </div>
+          <div class="tab ${state.tab==='workorders'?'active':''}" onclick="setTab('workorders')">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+            Work Orders (${getWorkOrders().filter(w=>w.customerId===c.id).length})
+          </div>
           <div class="tab ${state.tab==='files'?'active':''}" onclick="setTab('files')">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
             Files & Docs (${(c.files||[]).length})
           </div>
         </div>
-        ${state.tab==='estimates' ? detailEst(c,ES) : state.tab==='payments' ? detailPayments(c) : detailFiles(c)}
+        ${state.tab==='estimates' ? detailEst(c,ES) : state.tab==='payments' ? detailPayments(c) : state.tab==='workorders' ? detailWorkOrders(c) : detailFiles(c)}
       </div>
     </div>
   </div>`;
@@ -1752,6 +1756,60 @@ function detailFiles(c) {
           <button class="btn btn-danger btn-xs" onclick="delFileConfirm('${c.id}','${f.id}')"><svg viewBox="0 0 24 24" width="13px" height="13px" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
         </div>
       </div>`).join('')}</div>` : ''}
+  </div>`;
+}
+
+function detailWorkOrders(c) {
+  const WOS = getWorkOrders().filter(w => w.customerId === c.id).sort((a,b) => {
+    // Sort by status priority, then by scheduledDate
+    const order = ['in_progress','upcoming','new','quality_control','completed','closed'];
+    return (order.indexOf(a.woStatus) - order.indexOf(b.woStatus)) || (a.scheduledDate||'').localeCompare(b.scheduledDate||'');
+  });
+
+  return `<div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-size:0.9375rem;font-weight:700">Work Orders</div>
+      <button class="btn btn-primary btn-sm" onclick="openWOModal(null,'${c.id}')">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Work Order
+      </button>
+    </div>
+
+    ${WOS.length === 0
+      ? `<div class="empty" style="padding:36px">
+          <div class="empty-ico"><svg viewBox="0 0 24 24" width="44px" height="44px" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></div>
+          <div class="empty-t">No work orders yet</div>
+          <div class="empty-s">Work orders are created when a customer reaches Job Won, or you can add one manually.</div>
+        </div>`
+      : `<div class="card">
+          ${WOS.map((w,i) => {
+            const e = getEstimate(w.estimateId);
+            const dateStr = w.scheduledDate
+              ? new Date(w.scheduledDate+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
+              : 'Not scheduled';
+            return `<div style="display:flex;align-items:center;gap:12px;padding:13px 18px;${i<WOS.length-1?'border-bottom:1px solid var(--border)':''}">
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+                  ${woBdg(w.woStatus)}
+                  <span style="font-size:0.75rem;color:var(--muted)">WO-${w.id.slice(-6).toUpperCase()}</span>
+                </div>
+                <div style="font-size:0.9375rem;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${w.title}</div>
+                <div style="font-size:0.75rem;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap">
+                  <span>${dateStr}</span>
+                  ${w.assignedTo?`<span>· ${w.assignedTo}</span>`:''}
+                  ${e?`<span>· ${e.title}</span>`:''}
+                </div>
+              </div>
+              <div style="font-size:1rem;font-weight:700;color:var(--grn);flex-shrink:0">${$c(w.total)}</div>
+              <div style="display:flex;gap:5px;flex-shrink:0">
+                <button class="btn btn-secondary btn-xs" onclick="openWODetailModal('${w.id}')">Open</button>
+                <button class="btn btn-ghost btn-xs" onclick="openWOModal('${w.id}')">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`}
   </div>`;
 }
 
@@ -2376,7 +2434,7 @@ function resetWOFilters() {
   el.innerHTML = `<div class="page-hd"><div class="page-hd-title"><div class="page-hd-icon"><svg viewBox="0 0 20 20" fill="none" width="28" height="28" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="16" height="3" rx="1.5" stroke-width="1.5"/><rect x="2" y="8.5" width="10" height="3" rx="1.5" stroke-width="1.5"/><rect x="2" y="14" width="7" height="3" rx="1.5" stroke-width="1.5"/><circle cx="16" cy="15.5" r="2.5" stroke-width="1.5"/><path d="M14.5 15.5l1 1 2-2" stroke-width="1.3"/></svg></div><h1>Production</h1></div><p>Manage active jobs and track work orders from estimate to payment.</p></div>` + vProduction();
 }
 
-function openWOModal(id) {
+function openWOModal(id, preCid) {
   const w = id ? getWorkOrder(id) : null;
   const customers = getCustomers();
   document.getElementById('modal-root').innerHTML = `
@@ -2392,7 +2450,7 @@ function openWOModal(id) {
         <div class="fg"><label>Customer</label>
           <select id="wf-cid">
             <option value="">— Select Customer —</option>
-            ${customers.map(c=>`<option value="${c.id}" ${w?.customerId===c.id?'selected':''}>${c.name}</option>`).join('')}
+            ${customers.map(c=>`<option value="${c.id}" ${(w?.customerId===c.id||(preCid&&c.id===preCid))?'selected':''}>${c.name}</option>`).join('')}
           </select>
         </div>
         <div class="fg"><label>Status</label>
