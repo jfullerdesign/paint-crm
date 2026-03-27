@@ -163,11 +163,10 @@ textarea{resize:vertical;min-height:76px}
 /* DETAIL LAYOUT */
 .dl{display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start}
 .prof-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);overflow:hidden}
-.prof-hd{background:var(--grn);padding:26px 22px;text-align:center;position:relative;overflow:hidden}
-.prof-hd::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.06)}
-.prof-hd::after{content:'';position:absolute;bottom:-20px;left:-20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.05)}
-.prof-av{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;margin:0 auto 10px;border:2px solid rgba(255,255,255,.3);position:relative;z-index:1}
-.prof-nm{font-size:17px;font-weight:800;color:#fff;margin-bottom:7px;position:relative;z-index:1}
+.prof-hd{background:var(--grn);padding:26px 22px;text-align:center;position:relative;overflow:hidden;background-size:cover;background-position:center}
+.prof-hd::before{content:'';position:absolute;inset:0;background:linear-gradient(rgba(10,50,25,.72),rgba(10,50,25,.72));z-index:0}
+.prof-av{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;margin:0 auto 10px;border:2px solid rgba(255,255,255,.35);position:relative;z-index:1;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.prof-nm{font-size:17px;font-weight:800;color:#fff;margin-bottom:7px;position:relative;z-index:1;text-shadow:0 1px 6px rgba(0,0,0,.5)}
 .prof-info{padding:16px 18px}
 .ir{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13.5px}
 .ir:last-child{border-bottom:none}
@@ -263,7 +262,27 @@ textarea{resize:vertical;min-height:76px}
 .pay-balance-bar{height:6px;border-radius:3px;background:var(--bg);overflow:hidden;margin-top:5px}
 .pay-balance-fill{height:100%;border-radius:3px;background:var(--grn);transition:width .4s ease}
 
-/* PRODUCTION CALENDAR */
+/* CUSTOMER CARDS */
+.cust-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;padding:16px}
+.cust-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.cust-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.cust-card-img{height:110px;background-size:cover;background-position:center;position:relative}
+.cust-card-img-overlay{position:absolute;inset:0;background:linear-gradient(rgba(10,40,20,.55),rgba(10,40,20,.7))}
+.cust-card-av{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);width:38px;height:38px;border-radius:50%;background:var(--grn);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;border:3px solid var(--surface);box-shadow:0 2px 8px rgba(0,0,0,.25);z-index:1}
+.cust-card-body{padding:26px 14px 14px;text-align:center}
+.cust-card-name{font-size:14px;font-weight:700;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cust-card-meta{font-size:11.5px;color:var(--muted);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cust-card-footer{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-top:1px solid var(--border);background:#FAFAFA;font-size:11.5px;color:var(--muted)}
+
+/* PROFILE PHOTO EDIT */
+.prof-edit-btn{position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.45);border:1.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;transition:background .15s;font-size:13px}
+.prof-edit-btn:hover{background:rgba(0,0,0,.7)}
+
+/* VIEW TOGGLE */
+.view-toggle{display:flex;border:1.5px solid var(--border);border-radius:var(--rs);overflow:hidden}
+.view-toggle-btn{padding:7px 12px;font-size:13px;background:var(--surface);border:none;cursor:pointer;color:var(--muted);font-family:var(--font);transition:all .15s}
+.view-toggle-btn.active{background:var(--grn);color:#fff}
+.view-toggle-btn:not(:last-child){border-right:1.5px solid var(--border)}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border-radius:var(--rs);overflow:hidden}
 .cal-header{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border-radius:var(--rs) var(--rs) 0 0;overflow:hidden;margin-bottom:1px}
 .cal-dow{padding:9px 4px;text-align:center;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;background:#FAFAFA}
@@ -586,6 +605,50 @@ function fsz(b) {
 const bdg = s => `<span class="badge badge-${s}">${CSTAT[s]||s}</span>`;
 const woBdg = s => `<span class="badge badge-wo_${s}">${WOSTAT[s]||s}</span>`;
 
+// Pool of confirmed Pexels house exterior photos (free to use)
+const HOUSE_IMGS = [
+  8894802,  // Ranch home, winter suburban street
+  5071177,  // Suburban home with lawn, Curtis Adams
+  4469137,  // Modern family house, Curtis Adams
+  12700439, // Green siding house with garage
+  8288954,  // Brick two-story suburban for sale
+  8504300,  // American suburban with flag
+  34030968, // Charming single-story with garden
+  1396122,  // White house green lawn
+  106399,   // Brown bungalow exterior
+  280229,   // Yellow suburban house
+  209315,   // White concrete home
+  259593,   // White house blue sky
+  1029599,  // Elegant home exterior
+  2102587,  // Contemporary house front
+  323780,   // Architecture house exterior
+  1115804,  // Colonial style home
+  2581922,  // Suburban house driveway
+  7004453,  // Luxury home exterior
+  4116551,  // House front yard
+  3536271,  // House exterior sunshine
+  1029614,  // Red brick house
+  584399,   // New construction home
+  276724,   // Modern house exterior
+  164558,   // House exterior blue sky
+  2980606,  // House with porch
+  1438832,  // House exterior landscape
+  2119322,  // White house driveway
+  1571460,  // Craftsman home exterior
+  2474276,  // House front elevation
+  1396132,  // House green lawn trees
+  2590553,  // Suburban home day
+  1029610,  // House exterior warm light
+];
+
+function houseImg(customerId) {
+  // Deterministic pick based on customer ID so it stays consistent
+  let hash = 0;
+  for (let i = 0; i < customerId.length; i++) hash = (hash * 31 + customerId.charCodeAt(i)) >>> 0;
+  const id = HOUSE_IMGS[hash % HOUSE_IMGS.length];
+  return `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=800&h=300&fit=crop`;
+}
+
 // Compute revenue, cost, gross profit for an estimate.
 // If a line item has no saved cost, defaults to 40% margin (cost = price * 0.60).
 function estProfit(e) {
@@ -904,19 +967,59 @@ function openWODetailModal(id) {
   </div></div>`;
 }
 // ═══════════════════════════════════════════════
+let _custView = 'list'; // 'list' | 'card'
+
 function vCustomers() {
   return `<div class="card">
-    <div style="display:flex;gap:12px;padding:12px;border-bottom:1px solid var(--border);background:#FAFAFA">
-      <select class="fsel" style="flex:1" id="cs-stat" onchange="filterC()"><option value="">All Statuses</option>${Object.entries(CSTAT).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
-      <select class="fsel" style="flex:1" id="cs-src" onchange="filterC()"><option value="">All Sources</option>${Object.entries(SOURCES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
-      <select class="fsel" style="flex:1" id="cs-sort" onchange="filterC()"><option value="newest">Newest First</option><option value="oldest">Oldest First</option><option value="az">Name A→Z</option><option value="status">By Status</option></select>
+    <div style="display:flex;gap:12px;padding:12px;border-bottom:1px solid var(--border);background:#FAFAFA;align-items:center">
+      <select class="fsel" style="flex:1;min-width:0" id="cs-stat" onchange="filterC()"><option value="">All Statuses</option>${Object.entries(CSTAT).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
+      <select class="fsel" style="flex:1;min-width:0" id="cs-src" onchange="filterC()"><option value="">All Sources</option>${Object.entries(SOURCES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
+      <select class="fsel" style="flex:1;min-width:0" id="cs-sort" onchange="filterC()"><option value="newest">Newest First</option><option value="oldest">Oldest First</option><option value="az">Name A→Z</option><option value="status">By Status</option></select>
+      <div class="view-toggle" style="flex-shrink:0">
+        <button class="view-toggle-btn ${_custView==='list'?'active':''}" onclick="setCustView('list')">List View</button>
+        <button class="view-toggle-btn ${_custView==='card'?'active':''}" onclick="setCustView('card')">Card View</button>
+      </div>
     </div>
     <div class="fbar">
       <div class="si-wrap"><span class="sic">🔍</span><input type="text" class="search-input" id="cs-q" placeholder="Search name, phone, email, city..." oninput="filterC()"></div>
     </div>
-    <div id="ctbl">${custTable(getCustomers())}</div>
+    <div id="ctbl">${_custView==='card' ? custCards(getCustomers()) : custTable(getCustomers())}</div>
   </div>`;
 }
+
+function setCustView(v) {
+  _custView = v;
+  // Just swap the toggle buttons and content without full re-render
+  document.querySelectorAll('.view-toggle-btn').forEach((btn,i) => {
+    btn.classList.toggle('active', (i===0&&v==='list')||(i===1&&v==='card'));
+  });
+  filterC();
+}
+
+function custCards(arr) {
+  if (!arr.length) return `<div class="empty"><div class="empty-ico">👥</div><div class="empty-t">No customers found</div><div class="empty-s">Try adjusting your filters</div></div>`;
+  return `<div class="cust-cards">${arr.map(c => {
+    const ES = getEstimates(c.id);
+    const totalVal = ES.reduce((s,e) => s+(e.total||0), 0);
+    const imgUrl = c.profilePhoto || houseImg(c.id);
+    return `<div class="cust-card" onclick="navigate('customer','${c.id}')">
+      <div class="cust-card-img" style="background-image:url('${imgUrl}')">
+        <div class="cust-card-img-overlay"></div>
+        <div class="cust-card-av">${ini(c.name)}</div>
+      </div>
+      <div class="cust-card-body">
+        <div class="cust-card-name">${c.name}</div>
+        <div class="cust-card-meta">${c.address?c.address+(c.city?', '+c.city:''):c.city||c.phone||'No address'}</div>
+        <div style="display:flex;justify-content:center">${bdg(c.status)}</div>
+      </div>
+      <div class="cust-card-footer">
+        <span>${c.phone||'No phone'}</span>
+        <span>${ES.length} est · ${$c(totalVal)}</span>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
 function custTable(arr) {
   if (!arr.length) return `<div class="empty"><div class="empty-ico">👥</div><div class="empty-t">No customers found</div><div class="empty-s">Try adjusting your filters</div></div>`;
   return `<div class="tbl-wrap"><table>
@@ -946,7 +1049,7 @@ function filterC() {
   else if(sort==='oldest') arr.sort((a,b)=>a.createdAt-b.createdAt);
   else if(sort==='az') arr.sort((a,b)=>a.name.localeCompare(b.name));
   else arr.sort((a,b)=>a.status.localeCompare(b.status));
-  document.getElementById('ctbl').innerHTML = custTable(arr);
+  document.getElementById('ctbl').innerHTML = _custView==='card' ? custCards(arr) : custTable(arr);
 }
 
 // ═══════════════════════════════════════════════
@@ -1090,10 +1193,18 @@ function vDetail() {
     <div class="dl">
       <div>
         <div class="prof-card">
-          <div class="prof-hd">
-            <div class="prof-av">${ini(c.name)}</div>
-            <div class="prof-nm">${c.name}</div>
-            <div style="margin-top:7px">${bdg(c.status)}</div>
+          <div class="prof-hd" style="background-image:url('${c.profilePhoto || houseImg(c.id)}')">
+            <div class="prof-av" style="z-index:1;position:relative">${ini(c.name)}</div>
+            <div class="prof-nm" style="z-index:1;position:relative">${c.name}</div>
+            <div style="margin-top:7px;position:relative;z-index:1">${bdg(c.status)}</div>
+            <div class="prof-edit-btn" onclick="document.getElementById('prof-photo-${c.id}').click()" title="Change photo">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7.5 3.5L8.914 2H11.086L12.5 3.5H16A1.5 1.5 0 0117.5 5v11A1.5 1.5 0 0116 17.5H4A1.5 1.5 0 012.5 16V5A1.5 1.5 0 014 3.5h3.5Z" stroke="white" stroke-width="1.4" stroke-linejoin="round"/>
+                <circle cx="10" cy="10.5" r="2.5" stroke="white" stroke-width="1.4"/>
+                <path d="M14.5 6.5V9M13 7.5H16" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <input type="file" id="prof-photo-${c.id}" accept="image/png,image/jpeg" style="display:none" onchange="uploadProfilePhoto(event,'${c.id}')">
           </div>
           <div class="prof-info">
             ${c.phone?`<div class="ir"><div class="ii">📞</div><div><div class="il">Phone</div><div class="iv"><a href="tel:${c.phone}" style="color:inherit;text-decoration:none">${c.phone}</a></div></div></div>`:''}
@@ -1189,23 +1300,54 @@ function detailFiles(c) {
 function detailPayments(c) {
   const PAYS = getPayments(c.id).sort((a,b) => new Date(b.date) - new Date(a.date));
   const ES    = getEstimates(c.id);
-  const totalBilled = ES.reduce((s,e) => s+(e.total||0), 0);
-  const totalPaid   = PAYS.reduce((s,p) => s+(p.amount||0), 0);
-  const balance     = totalBilled - totalPaid;
-  const pct         = totalBilled > 0 ? Math.min(100, totalPaid/totalBilled*100) : 0;
+  const contractAmt  = ES.reduce((s,e) => s+(e.total||0), 0);
+  const depositAmt   = contractAmt * 0.5;
+  const totalPaid    = PAYS.reduce((s,p) => s+(p.amount||0), 0);
+  const balance      = contractAmt - totalPaid;
+  const pct          = contractAmt > 0 ? Math.min(100, totalPaid/contractAmt*100) : 0;
+  const depositPct   = contractAmt > 0 ? totalPaid/contractAmt*100 : 0;
   const METHODS = { check:'💳 Check', cash:'💵 Cash', credit_card:'🖱️ Credit Card', bank_transfer:'🏦 Bank Transfer', venmo:'📱 Venmo', zelle:'📲 Zelle', other:'🔖 Other' };
 
+  // Deposit banner
+  let bannerBg, bannerText;
+  if (totalPaid === 0) {
+    bannerBg   = '#DC2626';
+    bannerText = 'NO DEPOSIT COLLECTED YET';
+  } else if (depositPct < 33) {
+    bannerBg   = '#D97706';
+    bannerText = `INSUFFICIENT DEPOSIT PAYMENT (LESS THAN 33%) — ${depositPct.toFixed(1)}% COLLECTED`;
+  } else {
+    bannerBg   = '#16a34a';
+    bannerText = `DEPOSIT COLLECTED — ${depositPct.toFixed(1)}%`;
+  }
+
   return `<div>
+    <!-- DEPOSIT BANNER -->
+    <div style="background:${bannerBg};border-radius:var(--rs);padding:12px 18px;margin-bottom:14px;text-align:center">
+      <span style="color:#fff;font-weight:800;font-size:13.5px;letter-spacing:.5px">${bannerText}</span>
+    </div>
+
     <!-- BALANCE SUMMARY -->
     <div class="card" style="margin-bottom:16px">
       <div style="padding:16px 18px">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:14px">
-          <div><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Total Billed</div>
-            <div style="font-size:20px;font-weight:800">${$c(totalBilled)}</div></div>
-          <div><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Total Paid</div>
-            <div style="font-size:20px;font-weight:800;color:var(--grn)">${$c(totalPaid)}</div></div>
-          <div><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Balance Due</div>
-            <div style="font-size:20px;font-weight:800;color:${balance>0?'#DC2626':balance<0?'#7C3AED':'var(--grn)'}">${$c(balance)}</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;margin-bottom:14px">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Contract Amt</div>
+            <div style="font-size:20px;font-weight:800">${$c(contractAmt)}</div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Deposit Amt</div>
+            <div style="font-size:20px;font-weight:800;color:var(--muted)">${$c(depositAmt)}</div>
+            <div style="font-size:11px;color:var(--light);margin-top:2px">50% of contract</div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Total Paid</div>
+            <div style="font-size:20px;font-weight:800;color:var(--grn)">${$c(totalPaid)}</div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Balance Due</div>
+            <div style="font-size:20px;font-weight:800;color:${balance>0?'#DC2626':balance<0?'#7C3AED':'var(--grn)'}">${$c(balance)}</div>
+          </div>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
           <div style="flex:1"><div class="pay-balance-bar"><div class="pay-balance-fill" style="width:${pct}%"></div></div></div>
@@ -2436,6 +2578,19 @@ function processFiles(cid,files) {
     const r=new FileReader(); r.onload=e=>{addFile(cid,{name:file.name,type:file.type,size:file.size,data:e.target.result});render();};
     r.readAsDataURL(file);
   });
+}
+function uploadProfilePhoto(ev, cid) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  if (file.size > 5*1024*1024) { alert('Image must be under 5 MB.'); return; }
+  const r = new FileReader();
+  r.onload = e => {
+    updateCustomer(cid, { profilePhoto: e.target.result });
+    // Update the background image in place without full re-render
+    const hd = document.querySelector('.prof-hd');
+    if (hd) hd.style.backgroundImage = `url('${e.target.result}')`;
+  };
+  r.readAsDataURL(file);
 }
 
 // ═══════════════════════════════════════════════
