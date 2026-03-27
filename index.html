@@ -262,6 +262,30 @@ textarea{resize:vertical;min-height:76px}
 .pay-balance-bar{height:6px;border-radius:3px;background:var(--bg);overflow:hidden;margin-top:5px}
 .pay-balance-fill{height:100%;border-radius:3px;background:var(--grn);transition:width .4s ease}
 
+/* PROJECT PHOTO GALLERY */
+.photo-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:12px}
+.photo-thumb{position:relative;aspect-ratio:1;border-radius:var(--rs);overflow:hidden;cursor:pointer;background:var(--bg);border:1px solid var(--border)}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;transition:transform .2s}
+.photo-thumb:hover img{transform:scale(1.05)}
+.photo-thumb-del{position:absolute;top:5px;right:5px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.6);border:none;color:#fff;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;z-index:1}
+.photo-thumb:hover .photo-thumb-del{opacity:1}
+.photo-tag-group{margin-bottom:22px}
+.photo-tag-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.photo-tag-count{background:var(--bg);border-radius:100px;padding:1px 8px;font-size:11px;font-weight:700;color:var(--light)}
+.tag-chip{display:inline-flex;align-items:center;padding:5px 12px;border-radius:100px;font-size:12.5px;font-weight:600;cursor:pointer;border:2px solid transparent;transition:all .12s;background:var(--bg);color:var(--muted)}
+.tag-chip:hover{border-color:var(--grn);color:var(--grn)}
+.tag-chip.selected{background:var(--grn);color:#fff;border-color:var(--grn)}
+.lightbox-ov{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;animation:fdi .15s ease}
+.lightbox-img{max-width:84vw;max-height:82vh;border-radius:8px;object-fit:contain;box-shadow:0 8px 40px rgba(0,0,0,.6);transition:opacity .15s}
+.lightbox-close{position:fixed;top:18px;right:22px;font-size:26px;color:#fff;cursor:pointer;background:rgba(0,0,0,.4);border:none;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:.8;transition:opacity .15s}
+.lightbox-close:hover{opacity:1}
+.lightbox-meta{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);color:#fff;font-size:13px;background:rgba(0,0,0,.55);padding:7px 18px;border-radius:100px;white-space:nowrap}
+.lightbox-nav{position:fixed;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;z-index:2001}
+.lightbox-nav:hover{background:rgba(255,255,255,.3)}
+.lightbox-nav.prev{left:20px}
+.lightbox-nav.next{right:20px}
+.lightbox-counter{position:fixed;top:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.7);font-size:12.5px;font-weight:600;background:rgba(0,0,0,.4);padding:4px 12px;border-radius:100px}
+
 /* CUSTOMER CARDS */
 .cust-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;padding:16px}
 .cust-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s}
@@ -408,7 +432,7 @@ textarea{resize:vertical;min-height:76px}
 // DATA LAYER
 // ═══════════════════════════════════════════════
 const SK = 'brushpro_v1';
-let DB = { customers: [], estimates: [], workOrders: [], payments: [] };
+let DB = { customers: [], estimates: [], workOrders: [], payments: [], photoTags: ['Inspection','In Progress','Completion'] };
 
 function loadDB() {
   try { const r = localStorage.getItem(SK); if (r) DB = JSON.parse(r); } catch(e) {}
@@ -416,6 +440,7 @@ function loadDB() {
   if (!DB.estimates) DB.estimates = [];
   if (!DB.workOrders) DB.workOrders = [];
   if (!DB.payments)   DB.payments   = [];
+  if (!DB.photoTags)  DB.photoTags  = ['Inspection','In Progress','Completion'];
 }
 function saveDB() {
   try { localStorage.setItem(SK, JSON.stringify(DB)); }
@@ -549,6 +574,20 @@ function addFile(cid, f) {
 function deleteFile(cid, fid) {
   const c = getCustomer(cid); if (!c) return;
   c.files = c.files.filter(f => f.id !== fid); saveDB();
+}
+
+// PROJECT PHOTOS
+function addProjectPhoto(cid, p) {
+  const c = getCustomer(cid); if (!c) return;
+  if (!c.projectPhotos) c.projectPhotos = [];
+  c.projectPhotos.push({ id:uid(), name:p.name, data:p.data, tag:p.tag||'Inspection', uploadedAt:Date.now() });
+  // Save tag to global registry if new
+  if (!DB.photoTags.includes(p.tag)) { DB.photoTags.push(p.tag); }
+  saveDB();
+}
+function deleteProjectPhoto(cid, pid) {
+  const c = getCustomer(cid); if (!c) return;
+  c.projectPhotos = (c.projectPhotos||[]).filter(p => p.id !== pid); saveDB();
 }
 
 // GEOCODING via Nominatim
@@ -1232,8 +1271,9 @@ function vDetail() {
           <div class="tab ${state.tab==='estimates'?'active':''}" onclick="setTab('estimates')">Estimates (${ES.length})</div>
           <div class="tab ${state.tab==='files'?'active':''}" onclick="setTab('files')">Files & Docs (${(c.files||[]).length})</div>
           <div class="tab ${state.tab==='payments'?'active':''}" onclick="setTab('payments')">Payments (${getPayments(c.id).length})</div>
+          <div class="tab ${state.tab==='photos'?'active':''}" onclick="setTab('photos')">📸 Photos (${(c.projectPhotos||[]).length})</div>
         </div>
-        ${state.tab==='estimates' ? detailEst(c,ES) : state.tab==='payments' ? detailPayments(c) : detailFiles(c)}
+        ${state.tab==='estimates' ? detailEst(c,ES) : state.tab==='payments' ? detailPayments(c) : state.tab==='photos' ? detailPhotos(c) : detailFiles(c)}
       </div>
     </div>
   </div>`;
@@ -1387,7 +1427,217 @@ function detailPayments(c) {
         </div>`}
   </div>`;
 }
+
 // ═══════════════════════════════════════════════
+// PROJECT PHOTOS
+// ═══════════════════════════════════════════════
+function detailPhotos(c) {
+  const photos = c.projectPhotos || [];
+  // Group by tag
+  const tagMap = {};
+  photos.forEach(p => {
+    if (!tagMap[p.tag]) tagMap[p.tag] = [];
+    tagMap[p.tag].push(p);
+  });
+  const tags = Object.keys(tagMap);
+
+  return `<div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:15px;font-weight:700">Project Photos</div>
+      <button class="btn btn-primary btn-sm" onclick="openPhotoUploadModal('${c.id}')">＋ Add Photos</button>
+    </div>
+
+    ${photos.length === 0
+      ? `<div class="empty" style="padding:40px">
+          <div class="empty-ico" style="font-size:42px">📷</div>
+          <div class="empty-t">No project photos yet</div>
+          <div class="empty-s">Add photos grouped by Inspection, In Progress, Completion, or your own custom tags.</div>
+          <button class="btn btn-primary" style="margin-top:14px" onclick="openPhotoUploadModal('${c.id}')">＋ Add First Photos</button>
+        </div>`
+      : tags.map(tag => `
+        <div class="photo-tag-group">
+          <div class="photo-tag-label">
+            ${tag}
+            <span class="photo-tag-count">${tagMap[tag].length}</span>
+          </div>
+          <div class="photo-gallery">
+            ${tagMap[tag].map(p => `
+              <div class="photo-thumb" onclick="openLightbox('${c.id}','${p.id}')">
+                <img src="${p.data}" alt="${p.name}" loading="lazy">
+                <button class="photo-thumb-del" onclick="event.stopPropagation();delProjectPhotoConfirm('${c.id}','${p.id}')">✕</button>
+              </div>`).join('')}
+          </div>
+        </div>`).join('')}
+  </div>`;
+}
+
+function openPhotoUploadModal(cid) {
+  const tags = DB.photoTags || ['Inspection','In Progress','Completion'];
+  document.getElementById('modal-root').innerHTML = `
+  <div class="modal-ov" onclick="if(event.target===this)closeModal()">
+  <div class="modal" style="max-width:500px">
+    <div class="mh"><div class="mt">Add Project Photos</div><button class="mc" onclick="closeModal()">✕</button></div>
+    <div class="mb" style="padding:20px 24px;display:flex;flex-direction:column;gap:16px">
+
+      <!-- TAG SELECTOR -->
+      <div>
+        <label style="font-size:12.5px;font-weight:600;display:block;margin-bottom:8px">Tag / Category *</label>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px" id="tag-chips">
+          ${tags.map(t => `<span class="tag-chip" onclick="selectPhotoTag(this,'${t.replace(/'/g,"\\'")}','${cid}')">${t}</span>`).join('')}
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="custom-tag-input" placeholder="Or type a new tag…" style="flex:1;padding:8px 11px;border:1.5px solid var(--border);border-radius:var(--rs);font-size:13.5px;font-family:var(--font);outline:none" onfocus="this.style.borderColor='var(--grn)'" onblur="this.style.borderColor='var(--border)'">
+          <button class="btn btn-secondary btn-sm" onclick="applyCustomTag('${cid}')">Use</button>
+        </div>
+        <div id="selected-tag-display" style="margin-top:8px;font-size:12.5px;color:var(--muted)">No tag selected</div>
+      </div>
+
+      <!-- UPLOAD ZONE -->
+      <div>
+        <label style="font-size:12.5px;font-weight:600;display:block;margin-bottom:8px">Photos *</label>
+        <div class="fzone" onclick="document.getElementById('photo-upload-input').click()"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="handlePhotoDrop(event,'${cid}')">
+          <div class="fzone-ico">📷</div>
+          <div class="fzone-txt"><strong>Click to select</strong> or drag & drop</div>
+          <div class="fzone-sub">PNG or JPEG · Multiple files allowed · Max 5 MB each</div>
+        </div>
+        <input type="file" id="photo-upload-input" accept="image/png,image/jpeg" multiple style="display:none" onchange="handlePhotoSelect(event,'${cid}')">
+        <div id="photo-preview-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePhotoUploads('${cid}')">💾 Save Photos</button>
+    </div>
+  </div></div>`;
+  window._photoUploadTag = '';
+  window._photoUploadQueue = [];
+}
+
+function selectPhotoTag(el, tag, cid) {
+  document.querySelectorAll('#tag-chips .tag-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  window._photoUploadTag = tag;
+  document.getElementById('selected-tag-display').innerHTML = `<span style="color:var(--grn);font-weight:600">✓ Tag: ${tag}</span>`;
+  document.getElementById('custom-tag-input').value = '';
+}
+
+function applyCustomTag(cid) {
+  const val = document.getElementById('custom-tag-input').value.trim();
+  if (!val) return;
+  // Add chip if not already there
+  const chips = document.getElementById('tag-chips');
+  if (![...chips.querySelectorAll('.tag-chip')].some(c => c.textContent === val)) {
+    const chip = document.createElement('span');
+    chip.className = 'tag-chip';
+    chip.textContent = val;
+    chip.onclick = () => selectPhotoTag(chip, val, cid);
+    chips.appendChild(chip);
+  }
+  // Select it
+  const target = [...chips.querySelectorAll('.tag-chip')].find(c => c.textContent === val);
+  if (target) selectPhotoTag(target, val, cid);
+}
+
+function handlePhotoSelect(ev, cid) {
+  processPhotoFiles(Array.from(ev.target.files), cid);
+}
+function handlePhotoDrop(ev, cid) {
+  ev.preventDefault();
+  ev.currentTarget.classList.remove('dragover');
+  processPhotoFiles(Array.from(ev.dataTransfer.files).filter(f => f.type.startsWith('image/')), cid);
+}
+
+function processPhotoFiles(files, cid) {
+  const preview = document.getElementById('photo-preview-list');
+  files.forEach(file => {
+    if (file.size > 5*1024*1024) { alert(`"${file.name}" exceeds 5 MB.`); return; }
+    const r = new FileReader();
+    r.onload = e => {
+      window._photoUploadQueue = window._photoUploadQueue || [];
+      window._photoUploadQueue.push({ name: file.name, data: e.target.result });
+      // Show tiny preview
+      if (preview) {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.style.cssText = 'width:60px;height:60px;object-fit:cover;border-radius:6px;border:1.5px solid var(--border)';
+        preview.appendChild(img);
+      }
+    };
+    r.readAsDataURL(file);
+  });
+}
+
+function savePhotoUploads(cid) {
+  const tag = window._photoUploadTag;
+  const queue = window._photoUploadQueue || [];
+  if (!tag) { alert('Please select or enter a tag before saving.'); return; }
+  if (!queue.length) { alert('Please select at least one photo.'); return; }
+  queue.forEach(p => addProjectPhoto(cid, { name:p.name, data:p.data, tag }));
+  window._photoUploadQueue = [];
+  window._photoUploadTag = '';
+  closeModal();
+  render();
+}
+
+function openLightbox(cid, pid) {
+  const c = getCustomer(cid); if (!c) return;
+  const all = c.projectPhotos || [];
+  let idx = all.findIndex(x => x.id === pid);
+  if (idx === -1) return;
+
+  const total = all.length;
+  const p = all[idx];
+
+  document.getElementById('modal-root').innerHTML = `
+  <div class="lightbox-ov" onclick="closeModal()">
+    <img id="lb-img" class="lightbox-img" src="${p.data}" alt="${p.name}" onclick="event.stopPropagation()">
+    <button class="lightbox-close" onclick="closeModal()">✕</button>
+    ${total > 1 ? `
+      <button class="lightbox-nav prev" onclick="event.stopPropagation();lbNav(-1)">‹</button>
+      <button class="lightbox-nav next" onclick="event.stopPropagation();lbNav(1)">›</button>
+      <div id="lb-counter" class="lightbox-counter">${idx + 1} / ${total}</div>
+    ` : ''}
+    <div id="lb-meta" class="lightbox-meta">${p.tag} · ${p.name} · ${fdate(p.uploadedAt)}</div>
+  </div>`;
+
+  window._lbIdx = idx;
+  window._lbAll = all;
+
+  window.lbNav = function(dir) {
+    const img     = document.getElementById('lb-img');
+    const meta    = document.getElementById('lb-meta');
+    const counter = document.getElementById('lb-counter');
+    if (!img) return;
+    window._lbIdx = (window._lbIdx + dir + window._lbAll.length) % window._lbAll.length;
+    const next = window._lbAll[window._lbIdx];
+    img.src = next.data;
+    img.alt = next.name;
+    if (meta)    meta.textContent = `${next.tag} · ${next.name} · ${fdate(next.uploadedAt)}`;
+    if (counter) counter.textContent = `${window._lbIdx + 1} / ${window._lbAll.length}`;
+  };
+
+  window._lbKeyHandler = function(e) {
+    if (e.key === 'ArrowLeft')  window.lbNav(-1);
+    if (e.key === 'ArrowRight') window.lbNav(1);
+    if (e.key === 'Escape')     closeModal();
+  };
+  document.addEventListener('keydown', window._lbKeyHandler);
+
+  const origClose = window.closeModal;
+  window.closeModal = function() {
+    document.removeEventListener('keydown', window._lbKeyHandler);
+    window.closeModal = origClose;
+    origClose();
+  };
+}
+
+function delProjectPhotoConfirm(cid, pid) {
+  confirmDialog('Delete this photo? This cannot be undone.', () => { deleteProjectPhoto(cid, pid); render(); });
+}
+
 function vEstimates() {
   return `<div class="card">
     <div style="display:flex;gap:12px;padding:12px;border-bottom:1px solid var(--border);background:#FAFAFA">
