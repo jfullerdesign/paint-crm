@@ -1,0 +1,2845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BrushPro CRM — Painting Company</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --grn:#1A5C38;--grn2:#22783F;--grn-light:#E8F5EE;--grn-mid:#C6E8D4;
+  --bg:#F3F4F6;--surface:#FFFFFF;
+  --border:#E5E7EB;--text:#111827;
+  --muted:#6B7280;--light:#9CA3AF;
+  --red:#EF4444;--yellow:#F59E0B;--blue:#3B82F6;--purple:#7C3AED;
+  --r:16px;--rs:10px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.05);
+  --shadowlg:0 12px 40px rgba(0,0,0,.14);
+  --font:'Plus Jakarta Sans',sans-serif;
+  --sw:220px;--hh:68px;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+
+/* SIDEBAR */
+#sidebar{width:var(--sw);background:var(--surface);height:100vh;position:fixed;left:0;top:0;display:flex;flex-direction:column;z-index:100;border-right:1px solid var(--border)}
+.s-logo{padding:22px 18px 16px}
+.logo-wrap{display:flex;align-items:center;gap:10px}
+.logo-icon{width:36px;height:36px;background:var(--grn);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.logo-name{font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.4px}
+.logo-sub{font-size:10px;color:var(--light);font-weight:500;text-transform:uppercase;letter-spacing:.7px;margin-top:1px}
+.s-nav{flex:1;padding:8px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto}
+.nav-sect{font-size:10px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase;padding:14px 8px 5px;margin-top:2px}
+.nav-btn{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:var(--rs);color:var(--muted);font-size:13.5px;font-weight:500;cursor:pointer;transition:all .15s;border:none;background:none;width:100%;text-align:left;font-family:var(--font)}
+.nav-btn:hover{background:var(--grn-light);color:var(--grn)}
+.nav-btn.active{background:var(--grn);color:#fff;font-weight:600}
+.nav-btn .ni{font-size:15px;width:18px;text-align:center;flex-shrink:0}
+.s-foot{padding:16px 14px;border-top:1px solid var(--border)}
+.s-foot-card{background:var(--grn);border-radius:12px;padding:14px;color:#fff}
+.s-foot-t{font-size:13px;font-weight:700;margin-bottom:3px}
+.s-foot-s{font-size:11px;opacity:.7;margin-bottom:10px}
+.s-foot-btn{display:block;width:100%;padding:7px;background:rgba(255,255,255,.2);border:none;border-radius:8px;color:#fff;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:background .15s}
+.s-foot-btn:hover{background:rgba(255,255,255,.3)}
+
+/* MAIN */
+#main{margin-left:var(--sw);flex:1;min-height:100vh;display:flex;flex-direction:column}
+#topbar{height:var(--hh);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:50;gap:16px}
+.tb-search{flex:1;max-width:320px;display:flex;align-items:center;border:none;border-radius:10px;background:var(--bg);padding:0 12px;transition:border .15s}
+.tb-search:focus-within{border-color:var(--grn);background:#fff}
+.tb-search-ico{font-size:14px;color:var(--light);flex-shrink:0;margin-right:10px;line-height:1}
+.tb-search input{flex:1;padding:9px 0;border:none;outline:none;font-size:13.5px;font-family:var(--font);background:transparent;color:var(--text)}
+.tb-search input:focus{border-color:var(--grn);background:#fff}
+.tb-title{font-size:20px;font-weight:800;color:var(--text);flex:1}
+.tb-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.tb-icon-btn{width:36px;height:36px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--muted);transition:all .15s}
+.tb-icon-btn:hover{border-color:var(--grn);color:var(--grn)}
+.tb-avatar{width:36px;height:36px;border-radius:50%;background:var(--grn);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;cursor:pointer;flex-shrink:0}
+#content{padding:24px 26px;flex:1}
+
+/* PAGE HEADER */
+.page-hd{margin-bottom:22px}
+.page-hd h1{font-size:26px;font-weight:800;color:var(--text);margin-bottom:3px}
+.page-hd p{font-size:13.5px;color:var(--muted)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--rs);font-size:13.5px;font-weight:600;cursor:pointer;transition:all .15s;border:none;font-family:var(--font);line-height:1}
+.btn-primary{background:var(--grn);color:#fff}.btn-primary:hover{background:var(--grn2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(26,92,56,.3)}
+.btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border)}.btn-secondary:hover{background:var(--bg);border-color:var(--grn)}
+.btn-ghost{background:none;color:var(--muted);border:none}.btn-ghost:hover{background:var(--bg);color:var(--text)}
+.btn-danger{background:#FEF2F2;color:var(--red);border:1.5px solid #FECACA}.btn-danger:hover{background:#FEE2E2}
+.btn-sm{padding:7px 13px;font-size:12.5px}.btn-xs{padding:5px 9px;font-size:12px}
+
+/* CARDS */
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow)}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.ct{font-size:14.5px;font-weight:700}
+.cb{padding:20px}
+
+/* STAT CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:22px}
+.stat-card{background:var(--surface);border-radius:var(--r);padding:22px;border:1px solid var(--border);box-shadow:var(--shadow);position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.1)}
+.stat-card.dark{background:var(--grn);border-color:var(--grn)}
+/* Donezo-style diagonal hatch decoration on dark card */
+.stat-card.dark::after{content:'';position:absolute;right:-18px;bottom:-24px;width:130px;height:130px;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.09) 0px,rgba(255,255,255,.09) 2px,transparent 2px,transparent 14px);border-radius:50%;pointer-events:none}
+.stat-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.stat-label{font-size:13px;font-weight:600;color:var(--muted)}
+.stat-card.dark .stat-label{color:rgba(255,255,255,.78)}
+.stat-arrow{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--muted);cursor:pointer;transition:all .15s;flex-shrink:0;background:var(--surface)}
+.stat-card.dark .stat-arrow{border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.9);background:rgba(255,255,255,.1)}
+.stat-arrow:hover{border-color:var(--grn);color:var(--grn);background:var(--grn-light)}
+.stat-card.dark .stat-arrow:hover{border-color:#fff;color:#fff;background:rgba(255,255,255,.2)}
+.stat-val{font-size:38px;font-weight:800;line-height:1;margin-bottom:10px;letter-spacing:-1.5px;color:var(--text)}
+.stat-card.dark .stat-val{color:#fff}
+.stat-sub{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;background:rgba(255,255,255,.18);color:#fff;padding:3px 9px;border-radius:100px}
+.stat-sub.light{background:var(--grn-light);color:var(--grn)}
+/* Donezo hatch strip on white cards */
+.stat-card:not(.dark) .stat-hatch{position:absolute;bottom:0;right:0;width:70px;height:60px;background-image:repeating-linear-gradient(135deg,rgba(26,92,56,.04) 0px,rgba(26,92,56,.04) 2px,transparent 2px,transparent 12px);pointer-events:none;border-radius:0 0 var(--r) 0}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.badge-new_lead{background:#EFF6FF;color:#2563EB}
+.badge-contacted{background:#F5F3FF;color:#7C3AED}
+.badge-active_estimate{background:#FFF7ED;color:#C2410C}
+.badge-estimate_sent{background:#FFFBEB;color:#B45309}
+.badge-job_won{background:#ECFDF5;color:#047857}
+.badge-job_in_progress{background:#EFF6FF;color:#1D4ED8}
+.badge-job_complete{background:#F0FDF4;color:#15803D}
+.badge-job_lost{background:#FEF2F2;color:#DC2626}
+.badge-inactive{background:#F9FAFB;color:#6B7280}
+.badge-wo_new{background:#EFF6FF;color:#2563EB}
+.badge-wo_upcoming{background:#F5F3FF;color:#7C3AED}
+.badge-wo_in_progress{background:#FFF7ED;color:#C2410C}
+.badge-wo_quality_control{background:#FFFBEB;color:#B45309}
+.badge-wo_completed{background:#ECFDF5;color:#047857}
+.badge-wo_closed{background:#F0FDF4;color:#15803D}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:11px 18px;font-size:11px;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.6px;background:#FAFAFA;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:14px 18px;font-size:13.5px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr{cursor:pointer;transition:background .1s}
+tbody tr:hover{background:#F9FFF9}
+.tn{font-weight:600}.ts{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* FILTERS BAR */
+.fbar{display:flex;align-items:center;gap:10px;padding:1px;border-bottom:1px solid var(--border);flex-wrap:wrap;background:#FAFAFA}
+.si-wrap{display:flex;align-items:center;flex:1;min-width:180px;border:none;border-radius:var(--rs);background:#fff;transition:border .15s;padding:0 11px;margin:0}
+.si-wrap:focus-within{border-color:var(--grn)}
+.si-wrap .sic{font-size:14px;color:var(--muted);flex-shrink:0;margin-right:10px;line-height:1}
+.search-input{flex:1;padding:8px 0;border:none;outline:none;font-size:13.5px;font-family:var(--font);background:transparent;color:var(--text)}
+.fsel{padding:8px 11px;border:1.5px solid var(--border);border-radius:var(--rs);font-size:13.5px;font-family:var(--font);outline:none;cursor:pointer;background:#fff;color:var(--text);transition:border .15s}
+.fsel:focus{border-color:var(--grn)}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(5px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;animation:fdi .15s ease}
+.modal{background:var(--surface);border-radius:20px;box-shadow:var(--shadowlg);width:100%;max-width:580px;max-height:90vh;display:flex;flex-direction:column;animation:slu .2s ease}
+.modal-lg{max-width:780px}
+@keyframes fdi{from{opacity:0}to{opacity:1}}
+@keyframes slu{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.mh{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.mt{font-size:17px;font-weight:800}
+.mc{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .15s}
+.mc:hover{background:var(--bg);border-color:var(--grn);color:var(--grn)}
+.mb{padding:22px 24px;overflow-y:auto;flex:1}
+.mf{padding:14px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-shrink:0;background:#FAFAFA;border-radius:0 0 20px 20px}
+
+/* FORMS */
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg2 .fw{grid-column:1/-1}
+.fg{display:flex;flex-direction:column;gap:5px}
+label{font-size:12.5px;font-weight:600;color:var(--text)}
+.lopt{font-weight:400;color:var(--muted)}
+input[type=text],input[type=email],input[type=tel],input[type=number],input[type=date],select,textarea{padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--rs);font-size:13.5px;font-family:var(--font);color:var(--text);outline:none;transition:all .15s;background:var(--surface);width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--grn);box-shadow:0 0 0 3px rgba(26,92,56,.08)}
+textarea{resize:vertical;min-height:76px}
+
+/* DETAIL LAYOUT */
+.dl{display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start}
+.prof-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);overflow:hidden}
+.prof-hd{background:var(--grn);padding:26px 22px;text-align:center;position:relative;overflow:hidden}
+.prof-hd::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.06)}
+.prof-hd::after{content:'';position:absolute;bottom:-20px;left:-20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.05)}
+.prof-av{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;margin:0 auto 10px;border:2px solid rgba(255,255,255,.3);position:relative;z-index:1}
+.prof-nm{font-size:17px;font-weight:800;color:#fff;margin-bottom:7px;position:relative;z-index:1}
+.prof-info{padding:16px 18px}
+.ir{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13.5px}
+.ir:last-child{border-bottom:none}
+.ii{font-size:13px;color:var(--grn);width:16px;flex-shrink:0;margin-top:1px}
+.il{font-size:10.5px;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.iv{font-weight:500}
+
+/* TABS */
+.tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:18px}
+.tab{padding:11px 18px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--grn);border-bottom-color:var(--grn)}
+
+/* FILE ZONE */
+.fzone{border:2px dashed var(--border);border-radius:var(--r);padding:28px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg)}
+.fzone:hover,.fzone.dragover{border-color:var(--grn);background:var(--grn-light)}
+.fzone-ico{font-size:28px;margin-bottom:7px}
+.fzone-txt{font-size:13.5px;color:var(--muted)}
+.fzone-sub{font-size:12px;color:var(--light);margin-top:3px}
+.flist{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.fitem{display:flex;align-items:center;gap:11px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs)}
+.fitem-ico{font-size:22px;flex-shrink:0}
+.fitem-info{flex:1;min-width:0}
+.fitem-nm{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fitem-meta{font-size:11.5px;color:var(--muted);margin-top:2px}
+
+/* MAP */
+#map-cont{height:calc(100vh - var(--hh) - 90px);border-radius:var(--r);overflow:hidden;border:1px solid var(--border)}
+.map-filter-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:9px;cursor:pointer;transition:background .12s;font-size:13.5px;user-select:none}
+.map-filter-row:hover{background:var(--bg)}
+.map-filter-row input[type=checkbox]{width:15px;height:15px;accent-color:var(--grn);cursor:pointer;flex-shrink:0}
+.map-filter-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.map-filter-label{flex:1;font-weight:500;color:var(--text)}
+.map-filter-count{font-size:12px;font-weight:700;color:var(--muted);background:var(--bg);padding:1px 7px;border-radius:20px;min-width:22px;text-align:center}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:52px 20px;color:var(--muted)}
+.empty-ico{font-size:44px;margin-bottom:10px;opacity:.4}
+.empty-t{font-size:15px;font-weight:700;margin-bottom:5px;color:var(--text)}
+.empty-s{font-size:13.5px}
+
+/* PIPELINE */
+.pipe-scroll{overflow-x:auto;padding-bottom:6px}
+.pipeline{display:flex;gap:14px;min-width:max-content;padding-bottom:4px}
+.pc{width:236px;flex-shrink:0}
+.pch{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:var(--rs) var(--rs) 0 0;margin-bottom:-1px;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.pcb{background:var(--surface);border:1px solid var(--border);border-radius:0 0 var(--rs) var(--rs);min-height:100px;padding:9px;display:flex;flex-direction:column;gap:7px;transition:background .15s,border-color .15s}
+.pcb.drag-over{background:var(--grn-light);border-color:var(--grn);border-style:dashed}
+.pcard{background:#fff;border:1px solid var(--border);border-radius:var(--rs);padding:12px;cursor:grab;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);user-select:none}
+.pcard:hover{box-shadow:0 4px 14px rgba(0,0,0,.1);transform:translateY(-1px);border-color:var(--grn-mid)}
+.pcard.dragging{opacity:.3;cursor:grabbing;transform:scale(.96)}
+.pcard-nm{font-size:12.5px;font-weight:700;margin-bottom:3px}
+.pcard-s{font-size:11.5px;color:var(--muted)}
+.drop-ghost{height:4px;border-radius:2px;background:var(--grn);margin:2px 0;opacity:0;transition:opacity .1s;pointer-events:none}
+.drop-ghost.visible{opacity:1}
+
+/* BACK BTN */
+.back{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer;margin-bottom:18px;transition:color .15s;padding:6px 10px;border-radius:var(--rs);background:var(--surface);border:1px solid var(--border)}
+.back:hover{color:var(--grn);border-color:var(--grn)}
+
+/* DIVIDER */
+.divider{border:none;border-top:1px solid var(--border);margin:16px 0}
+
+/* LINE ITEMS */
+.li-row{display:grid;grid-template-columns:1fr 60px 70px 90px 70px 90px 90px 32px;gap:6px;margin-bottom:6px;align-items:center}
+.li-row input{padding:8px 8px}
+.li-cost{background:#FFF8F0 !important;border-color:#FDD9B5 !important}
+.li-margin{background:#FFF8F0 !important;border-color:#FDD9B5 !important}
+.li-internal-label{font-size:9.5px;font-weight:700;color:#C2410C;text-transform:uppercase;letter-spacing:.4px;text-align:center;margin-top:-2px}
+
+/* TOTALS */
+.totals-box{background:var(--grn-light);border-radius:var(--rs);padding:14px 16px;margin-top:12px;border:1px solid var(--grn-mid)}
+.totals-grid{display:grid;grid-template-columns:1fr auto;gap:4px 24px;max-width:260px;margin-left:auto;font-size:13.5px}
+
+/* ACTIVITY */
+.act-item{display:flex;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)}
+.act-item:last-child{border-bottom:none}
+.act-dot{width:8px;height:8px;border-radius:50%;background:var(--grn);margin-top:5px;flex-shrink:0}
+.act-txt{font-size:13.5px;line-height:1.5}
+.act-time{font-size:11.5px;color:var(--muted);margin-top:2px}
+
+@media(max-width:860px){
+  :root{--sw:0px}
+  #sidebar{display:none}
+  .dl{grid-template-columns:1fr}
+  .fg2{grid-template-columns:1fr}
+  .fg2 .fw{grid-column:1}
+}
+/* PAYMENTS */
+.pay-row{display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--border);font-size:13.5px}
+.pay-row:last-child{border-bottom:none}
+.pay-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:100px;font-size:11.5px;font-weight:600}
+.pay-balance-bar{height:6px;border-radius:3px;background:var(--bg);overflow:hidden;margin-top:5px}
+.pay-balance-fill{height:100%;border-radius:3px;background:var(--grn);transition:width .4s ease}
+
+/* PRODUCTION CALENDAR */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border-radius:var(--rs);overflow:hidden}
+.cal-header{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border-radius:var(--rs) var(--rs) 0 0;overflow:hidden;margin-bottom:1px}
+.cal-dow{padding:9px 4px;text-align:center;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;background:#FAFAFA}
+.cal-day{min-height:88px;background:var(--surface);padding:7px 8px;position:relative;vertical-align:top}
+.cal-day.other-month{background:#FAFAFA}
+.cal-day.today{background:#F0FDF4}
+.cal-day-num{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:5px}
+.cal-day.other-month .cal-day-num{color:var(--light)}
+.cal-day.today .cal-day-num{width:26px;height:26px;background:var(--grn);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12.5px;margin-bottom:5px}
+.cal-chip{display:flex;align-items:center;gap:4px;padding:3px 7px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;transition:opacity .1s;border:none;width:100%;text-align:left;font-family:var(--font)}
+.cal-chip:hover{opacity:.8}
+.wo-filters{display:flex;gap:8px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid var(--border);background:#FAFAFA}
+.wo-pill{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:100px;font-size:12.5px;font-weight:600;cursor:pointer;border:2px solid transparent;transition:all .15s;user-select:none}
+.wo-pill input[type=checkbox]{display:none}
+.wo-pill-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.wo-pill.checked{border-color:currentColor}
+.wo-pill:not(.checked){opacity:.45;filter:grayscale(.4)}
+.wo-pill:hover{opacity:1;filter:none}
+
+/* WO CARDS */
+.wo-list{display:flex;flex-direction:column;gap:0}
+.wo-row{display:grid;grid-template-columns:36px 1fr 160px 120px 120px 110px 80px;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--border);transition:background .1s;cursor:pointer}
+.wo-row:hover{background:#F9FFF9}
+.wo-row:last-child{border-bottom:none}
+.wo-num{font-size:11px;font-weight:700;color:var(--light);font-family:monospace}
+.wo-bar{display:flex;gap:0;height:5px;border-radius:3px;overflow:hidden;margin-top:5px}
+.wo-bar-seg{height:100%;transition:width .3s}
+
+.flex-c{display:flex;align-items:center}
+.gap-2{gap:8px}.gap-3{gap:12px}
+.fw-bold{font-weight:700}
+.t-muted{color:var(--muted);font-size:12.5px}
+.t-right{text-align:right}
+
+/* SVG NAV ICONS */
+.ni-svg{width:16px;height:16px;flex-shrink:0;color:currentColor}
+</style>
+</head>
+<body>
+
+<aside id="sidebar">
+  <div class="s-logo">
+    <div class="logo-wrap">
+      <div class="logo-icon">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 17c2-1 4-3 4-5 0-1.5-1-2-1-3.5C6 6 8 4 11 4c2 0 4 1.5 4 3.5 0 2-2 3-2 5s1.5 3.5 4 4.5" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10.5" cy="10" r="1.2" fill="#fff"/></svg>
+      </div>
+      <div>
+        <div class="logo-name">BrushPro</div>
+        <div class="logo-sub">Painting CRM</div>
+      </div>
+    </div>
+  </div>
+  <nav class="s-nav">
+    <div class="nav-sect">Menu</div>
+    <button class="nav-btn active" onclick="navigate('dashboard')" data-view="dashboard">
+      <svg class="ni-svg" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1.5" fill="currentColor" opacity=".9"/><rect x="11" y="3" width="6" height="6" rx="1.5" fill="currentColor" opacity=".6"/><rect x="3" y="11" width="6" height="6" rx="1.5" fill="currentColor" opacity=".6"/><rect x="11" y="11" width="6" height="6" rx="1.5" fill="currentColor" opacity=".9"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-btn" onclick="navigate('customers')" data-view="customers">
+      <svg class="ni-svg" viewBox="0 0 20 20" fill="none"><circle cx="8" cy="7" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M2 17c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="15" cy="7" r="2" stroke="currentColor" stroke-width="1.4"/><path d="M17 15c0-2.21-1.343-4-3-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Customers & Leads
+    </button>
+    <button class="nav-btn" onclick="navigate('pipeline')" data-view="pipeline">
+      <svg class="ni-svg" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="4" height="12" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="8" y="7" width="4" height="9" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="14" y="10" width="4" height="6" rx="1.5" stroke="currentColor" stroke-width="1.6"/></svg>
+      Pipeline Board
+    </button>
+    <button class="nav-btn" onclick="navigate('estimates')" data-view="estimates">
+      <svg class="ni-svg" viewBox="0 0 20 20" fill="none"><rect x="4" y="2" width="12" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Estimates
+    </button>
+    <button class="nav-btn" onclick="navigate('map')" data-view="map">
+      <svg class="ni-svg" viewBox="0 0 20 20" fill="none"><path d="M10 2C7.239 2 5 4.239 5 7c0 4 5 11 5 11s5-7 5-11c0-2.761-2.239-5-5-5Z" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="7" r="2" stroke="currentColor" stroke-width="1.4"/></svg>
+      Map View
+    </button>
+    <button class="nav-btn" onclick="navigate('production')" data-view="production">
+      <svg class="ni-svg" viewBox="0 0 20 20" fill="none"><rect x="2" y="3" width="16" height="3" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="2" y="8.5" width="10" height="3" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="2" y="14" width="7" height="3" rx="1.5" stroke="currentColor" stroke-width="1.5"/><circle cx="16" cy="15.5" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M14.5 15.5l1 1 2-2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Production
+    </button>
+    <button class="nav-btn" onclick="navigate('finance')" data-view="finance">
+      <svg class="ni-svg" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M2 8h16" stroke="currentColor" stroke-width="1.5"/><circle cx="6" cy="12" r="1" fill="currentColor"/><path d="M9 12h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Finance
+    </button>
+    <div class="nav-sect">General</div>
+    <button class="nav-btn" onclick="alert('Settings coming soon!')">
+      <svg class="ni-svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.343 4.343l1.414 1.414M14.243 14.243l1.414 1.414M4.343 15.657l1.414-1.414M14.243 5.757l1.414-1.414" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Settings
+    </button>
+    <button class="nav-btn" onclick="alert('Help & docs coming soon!')">
+      <svg class="ni-svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/><path d="M10 14v-1M10 10.5c0-1 .75-1.5 1.5-2s1.5-1 1.5-2a3 3 0 10-6 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Help
+    </button>
+  </nav>
+  <div class="s-foot">
+    <div class="s-foot-card">
+      <div class="s-foot-t">All data saved locally</div>
+      <div class="s-foot-s">No account needed. Your data stays on your device.</div>
+      <button class="s-foot-btn" onclick="exportData()">⬇️ Export Backup</button>
+    </div>
+  </div>
+</aside>
+
+<div id="main">
+  <header id="topbar">
+    <div class="tb-search">
+      <span class="tb-search-ico">🔍</span>
+      <input type="text" placeholder="Search customers, estimates...">
+    </div>
+    <div id="tb-title" class="tb-title" style="display:none"></div>
+    <div class="tb-actions" id="tb-actions">
+      <div class="tb-icon-btn" title="Notifications">🔔</div>
+      <div class="tb-icon-btn" title="Messages">✉️</div>
+      <div class="tb-avatar" title="Your account">BP</div>
+    </div>
+  </header>
+  <div id="content"></div>
+</div>
+
+<div id="modal-root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════
+// DATA LAYER
+// ═══════════════════════════════════════════════
+const SK = 'brushpro_v1';
+let DB = { customers: [], estimates: [], workOrders: [], payments: [] };
+
+function loadDB() {
+  try { const r = localStorage.getItem(SK); if (r) DB = JSON.parse(r); } catch(e) {}
+  if (!DB.customers) DB.customers = [];
+  if (!DB.estimates) DB.estimates = [];
+  if (!DB.workOrders) DB.workOrders = [];
+  if (!DB.payments)   DB.payments   = [];
+}
+function saveDB() {
+  try { localStorage.setItem(SK, JSON.stringify(DB)); }
+  catch(e) { alert('Storage is full. Please delete some files to continue.'); }
+}
+function uid() { return '_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+
+// CUSTOMERS
+const getCustomers = () => DB.customers;
+const getCustomer = id => DB.customers.find(c => c.id === id);
+function addCustomer(d) {
+  const c = { id:uid(), name:d.name||'', email:d.email||'', phone:d.phone||'',
+    address:d.address||'', city:d.city||'', state:d.state||'', zip:d.zip||'',
+    status:d.status||'new_lead', source:d.source||'', notes:d.notes||'',
+    lat:d.lat||null, lng:d.lng||null, files:[], createdAt:Date.now(), updatedAt:Date.now() };
+  DB.customers.push(c);
+  saveDB();
+  if (!c.lat && c.address) geocode(c.id);
+  return c;
+}
+function updateCustomer(id, d) {
+  const i = DB.customers.findIndex(c => c.id === id);
+  if (i === -1) return;
+  const old = DB.customers[i];
+  DB.customers[i] = { ...old, ...d, id, updatedAt:Date.now() };
+  saveDB();
+  if (d.address !== old.address || d.city !== old.city || d.zip !== old.zip) geocode(id);
+  return DB.customers[i];
+}
+function deleteCustomer(id) {
+  DB.customers = DB.customers.filter(c => c.id !== id);
+  DB.estimates = DB.estimates.filter(e => e.customerId !== id);
+  saveDB();
+}
+
+// ESTIMATES
+const getEstimates = cid => cid ? DB.estimates.filter(e => e.customerId === cid) : DB.estimates;
+const getEstimate = id => DB.estimates.find(e => e.id === id);
+function addEstimate(d) {
+  const e = { id:uid(), customerId:d.customerId, title:d.title||'New Estimate',
+    description:d.description||'', lineItems:d.lineItems||[], subtotal:d.subtotal||0,
+    taxRate:d.taxRate||0, tax:d.tax||0, total:d.total||0,
+    notes:d.notes||'', validUntil:d.validUntil||'', createdAt:Date.now(), updatedAt:Date.now() };
+  DB.estimates.push(e);
+  saveDB();
+  return e;
+}
+function updateEstimate(id, d) {
+  const i = DB.estimates.findIndex(e => e.id === id);
+  if (i === -1) return;
+  DB.estimates[i] = { ...DB.estimates[i], ...d, id, updatedAt:Date.now() };
+  saveDB();
+  return DB.estimates[i];
+}
+function deleteEstimate(id) { DB.estimates = DB.estimates.filter(e => e.id !== id); saveDB(); }
+
+// WORK ORDERS
+const getWorkOrders = () => DB.workOrders;
+const getWorkOrder = id => DB.workOrders.find(w => w.id === id);
+const getWorkOrderByEstimate = eid => DB.workOrders.find(w => w.estimateId === eid);
+function addWorkOrder(d) {
+  const w = { id:uid(), estimateId:d.estimateId||null, customerId:d.customerId||null,
+    title:d.title||'Work Order', woStatus:d.woStatus||'new',
+    scheduledDate:d.scheduledDate||'', assignedTo:d.assignedTo||'',
+    notes:d.notes||'', total:d.total||0,
+    createdAt:Date.now(), updatedAt:Date.now() };
+  DB.workOrders.push(w);
+  saveDB();
+  return w;
+}
+function updateWorkOrder(id, d) {
+  const i = DB.workOrders.findIndex(w => w.id === id);
+  if (i === -1) return;
+  DB.workOrders[i] = { ...DB.workOrders[i], ...d, id, updatedAt:Date.now() };
+  saveDB();
+  return DB.workOrders[i];
+}
+function deleteWorkOrder(id) { DB.workOrders = DB.workOrders.filter(w => w.id !== id); saveDB(); }
+
+// PAYMENTS
+const getPayments = cid => cid ? DB.payments.filter(p => p.customerId === cid) : DB.payments;
+const getPayment  = id  => DB.payments.find(p => p.id === id);
+function addPayment(d) {
+  const p = { id:uid(), customerId:d.customerId||null, estimateId:d.estimateId||null,
+    amount:d.amount||0, method:d.method||'check', reference:d.reference||'',
+    date:d.date||new Date().toISOString().slice(0,10), notes:d.notes||'',
+    createdAt:Date.now() };
+  DB.payments.push(p);
+  saveDB();
+  return p;
+}
+function updatePayment(id, d) {
+  const i = DB.payments.findIndex(p => p.id === id);
+  if (i === -1) return;
+  DB.payments[i] = { ...DB.payments[i], ...d, id };
+  saveDB();
+  return DB.payments[i];
+}
+function deletePayment(id) { DB.payments = DB.payments.filter(p => p.id !== id); saveDB(); }
+
+// Helper: total paid for an estimate
+const paidForEst  = eid  => DB.payments.filter(p => p.estimateId === eid).reduce((s,p) => s+(p.amount||0), 0);
+// Helper: total paid for a customer
+const paidForCust = cid  => DB.payments.filter(p => p.customerId === cid).reduce((s,p) => s+(p.amount||0), 0);
+// Helper: balance owed for a customer (sum of estimate totals minus payments)
+function balanceForCust(cid) {
+  const rev = getEstimates(cid).reduce((s,e) => s+(e.total||0), 0);
+  return rev - paidForCust(cid);
+}
+
+// Auto-create work order when customer is job_won or beyond and estimate has no WO yet
+function syncWorkOrder(estimate) {
+  const c = getCustomer(estimate.customerId);
+  const wonStatuses = ['job_won','job_in_progress','job_complete'];
+  if (c && wonStatuses.includes(c.status) && !getWorkOrderByEstimate(estimate.id)) {
+    addWorkOrder({
+      estimateId: estimate.id, customerId: estimate.customerId,
+      title: estimate.title, total: estimate.total,
+      woStatus: 'new', notes: estimate.notes || ''
+    });
+  }
+}
+
+// FILES
+function addFile(cid, f) {
+  const c = getCustomer(cid); if (!c) return;
+  if (!c.files) c.files = [];
+  c.files.push({ id:uid(), name:f.name, type:f.type, size:f.size, data:f.data, uploadedAt:Date.now() });
+  saveDB();
+}
+function deleteFile(cid, fid) {
+  const c = getCustomer(cid); if (!c) return;
+  c.files = c.files.filter(f => f.id !== fid); saveDB();
+}
+
+// GEOCODING via Nominatim
+async function geocode(id) {
+  const c = getCustomer(id); if (!c || !c.address) return;
+  const q = [c.address, c.city, c.state, c.zip].filter(Boolean).join(', ');
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`);
+    const data = await res.json();
+    if (data?.[0]) updateCustomer(id, { lat:parseFloat(data[0].lat), lng:parseFloat(data[0].lon) });
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════
+// LABELS & HELPERS
+// ═══════════════════════════════════════════════
+const CSTAT = { new_lead:'New Lead', contacted:'Contacted', active_estimate:'Active Estimate',
+  estimate_sent:'Estimate Sent', job_won:'Job Won', job_in_progress:'Job In Progress',
+  job_complete:'Job Complete', job_lost:'Job Lost', inactive:'Inactive' };
+const WOSTAT = { new:'New Work Order', upcoming:'Upcoming', in_progress:'In Progress',
+  quality_control:'Quality Control', completed:'Completed', closed:'Closed (Paid)' };
+const WOSTAT_COLORS = { new:'#3B82F6', upcoming:'#7C3AED', in_progress:'#C2410C',
+  quality_control:'#B45309', completed:'#047857', closed:'#15803D' };
+const WOSTAT_BG = { new:'#EFF6FF', upcoming:'#F5F3FF', in_progress:'#FFF7ED',
+  quality_control:'#FFFBEB', completed:'#ECFDF5', closed:'#F0FDF4' };
+const SOURCES = { referral:'Referral', website:'Website', google:'Google', yelp:'Yelp',
+  facebook:'Facebook / Social', nextdoor:'Nextdoor', yard_sign:'Yard Sign',
+  repeat:'Repeat Customer', other:'Other' };
+const MAP_COLORS = { new_lead:'#2563EB', contacted:'#7C3AED', active_estimate:'#C2410C',
+  estimate_sent:'#B45309', job_won:'#047857', job_in_progress:'#1D4ED8',
+  job_complete:'#15803D', job_lost:'#DC2626', inactive:'#6B7280' };
+
+const $c = (n) => '$' + (+n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fdate = ts => ts ? new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+function ago(ts) {
+  const m = Math.floor((Date.now()-ts)/60000);
+  if (m<1) return 'just now'; if (m<60) return m+'m ago';
+  const h = Math.floor(m/60); if (h<24) return h+'h ago';
+  const d = Math.floor(h/24); if (d<30) return d+'d ago';
+  return fdate(ts);
+}
+const ini = n => n.split(' ').filter(Boolean).slice(0,2).map(x=>x[0].toUpperCase()).join('');
+function ficon(t) {
+  if (t?.startsWith('image/')) return '🖼️';
+  if (t==='application/pdf') return '📄';
+  if (t?.includes('word')) return '📝';
+  if (t?.includes('sheet')||t?.includes('excel')) return '📊';
+  return '📎';
+}
+function fsz(b) {
+  if (b<1024) return b+' B'; if (b<1048576) return (b/1024).toFixed(1)+' KB';
+  return (b/1048576).toFixed(1)+' MB';
+}
+const bdg = s => `<span class="badge badge-${s}">${CSTAT[s]||s}</span>`;
+const woBdg = s => `<span class="badge badge-wo_${s}">${WOSTAT[s]||s}</span>`;
+
+// Compute revenue, cost, gross profit for an estimate.
+// If a line item has no saved cost, defaults to 40% margin (cost = price * 0.60).
+function estProfit(e) {
+  if (!e.lineItems?.length) return { rev: e.total||0, cost: (e.total||0)*0.6, gp: (e.total||0)*0.4 };
+  let rev = 0, cost = 0;
+  e.lineItems.forEach(li => {
+    const qty = li.qty || 1;
+    const price = li.unitPrice || 0;
+    const m = (li.margin != null && li.margin >= 0 && li.margin < 100) ? li.margin : 40;
+    const c = (li.cost != null && li.cost > 0) ? li.cost : price * (1 - m / 100);
+    rev  += qty * price;
+    cost += qty * c;
+  });
+  return { rev, cost, gp: rev - cost };
+}
+
+// ═══════════════════════════════════════════════
+// ROUTER
+// ═══════════════════════════════════════════════
+let state = { view:'dashboard', cid:null, tab:'estimates' };
+let mapInst = null;
+
+function navigate(view, id) {
+  state.view = view; state.cid = id||null;
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.toggle('active', el.dataset.view===view));
+  render();
+  window.scrollTo(0,0);
+}
+
+function render() {
+  const el = document.getElementById('content');
+  const acts = document.getElementById('tb-actions');
+  const V = state.view;
+  const actBtns = (extra='') => `
+    ${extra}
+    <div class="tb-icon-btn" title="Notifications">🔔</div>
+    <div class="tb-icon-btn" title="Messages">✉️</div>
+    <div class="tb-avatar" title="Your account">BP</div>`;
+  if (V==='dashboard') {
+    acts.innerHTML = actBtns(`<button class="btn btn-primary" onclick="openCustModal()">＋ Add Lead</button><button class="btn btn-secondary" onclick="exportData()">⬇️ Export</button>`);
+    el.innerHTML = `<div class="page-hd"><h1>Dashboard</h1><p>Track leads, estimates, and jobs for your painting business.</p></div>` + vDashboard();
+  } else if (V==='customers') {
+    acts.innerHTML = actBtns(`<button class="btn btn-primary" onclick="openCustModal()">＋ New Lead</button>`);
+    el.innerHTML = `<div class="page-hd"><h1>Customers & Leads</h1><p>Manage all your contacts and their statuses.</p></div>` + vCustomers();
+  } else if (V==='pipeline') {
+    acts.innerHTML = actBtns(`<button class="btn btn-primary" onclick="openCustModal()">＋ New Lead</button>`);
+    el.innerHTML = `<div class="page-hd"><h1>Pipeline Board</h1><p>Drag cards between columns to update customer status.</p></div>` + vPipeline();
+  } else if (V==='estimates') {
+    acts.innerHTML = actBtns(`<button class="btn btn-primary" onclick="openEstModal(null)">＋ New Estimate</button>`);
+    el.innerHTML = `<div class="page-hd"><h1>Estimates</h1><p>All estimates across every customer.</p></div>` + vEstimates();
+  } else if (V==='map') {
+    acts.innerHTML = actBtns();
+    el.innerHTML = `<div class="page-hd"><h1>Map View</h1><p>See where your customers are located.</p></div>` + vMap();
+    setTimeout(initMap,120);
+  } else if (V==='production') {
+    acts.innerHTML = actBtns(`<button class="btn btn-primary" onclick="openWOModal(null)">＋ New Work Order</button>`);
+    el.innerHTML = `<div class="page-hd"><h1>Production</h1><p>Manage active jobs and track work orders from estimate to payment.</p></div>` + vProduction();
+  } else if (V==='finance') {
+    acts.innerHTML = actBtns();
+    el.innerHTML = `<div class="page-hd"><h1>Finance</h1><p>Review estimate revenue, gross profit, and projected earnings by period.</p></div>` + vFinance();
+  } else if (V==='customer') {
+    const c = getCustomer(state.cid);
+    acts.innerHTML = actBtns(c ? `<button class="btn btn-secondary btn-sm" onclick="openCustModal('${c.id}')">✏️ Edit</button><button class="btn btn-danger btn-sm" onclick="delCust('${c.id}')">🗑️ Delete</button>` : '');
+    el.innerHTML = vDetail();
+  }
+}
+
+// ═══════════════════════════════════════════════
+// DASHBOARD VIEW
+// ═══════════════════════════════════════════════
+function vDashboard() {
+  const CS = getCustomers(), ES = getEstimates();
+  const totalC = CS.length;
+  const leads = CS.filter(c=>['new_lead','contacted'].includes(c.status)).length;
+  const openEst = ES.filter(e=>{ const c=getCustomer(e.customerId); return c&&['new_lead','contacted','active_estimate','estimate_sent'].includes(c.status); }).length;
+  const won = CS.filter(c=>['job_won','job_in_progress','job_complete'].includes(c.status)).length;
+  const pipe = ES.filter(e=>{ const c=getCustomer(e.customerId); return c&&['active_estimate','estimate_sent','job_won'].includes(c.status); }).reduce((s,e)=>s+(e.total||0),0);
+  const closed = CS.filter(c=>['job_won','job_lost'].includes(c.status)).length;
+  const wonCnt = CS.filter(c=>c.status==='job_won').length;
+  const wr = closed>0 ? Math.round(wonCnt/closed*100) : 0;
+  const recent = [...CS].sort((a,b)=>b.createdAt-a.createdAt).slice(0,6);
+  const srcMap = {}; CS.forEach(c=>{ if(c.source) srcMap[c.source]=(srcMap[c.source]||0)+1; });
+  const topSrc = Object.entries(srcMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  // Profit calculations — uses 40% default margin when no cost data saved
+  let totalRevenue = 0, totalCost = 0, marginsArr = [];
+  ES.forEach(e => {
+    if (!e.lineItems?.length) return;
+    const { rev, cost, gp } = estProfit(e);
+    if (rev > 0) {
+      totalRevenue += rev;
+      totalCost += cost;
+      marginsArr.push(gp / rev * 100);
+    }
+  });
+  const grossProfit = totalRevenue - totalCost;
+  const avgMargin = marginsArr.length > 0 ? marginsArr.reduce((s,m)=>s+m,0)/marginsArr.length : null;
+  const marginColor = avgMargin === null ? 'var(--muted)' : avgMargin >= 40 ? 'var(--grn)' : avgMargin >= 25 ? '#B45309' : '#DC2626';
+
+  return `
+  <div class="stats-grid">
+    <div class="stat-card dark">
+      <div class="stat-card-top"><div class="stat-label">Total Customers</div><div class="stat-arrow" onclick="navigate('customers')" title="View all">↗</div></div>
+      <div class="stat-val">${totalC}</div>
+      <div class="stat-sub">＋ All records</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-hatch"></div>
+      <div class="stat-card-top"><div class="stat-label">Active Leads</div><div class="stat-arrow" onclick="navigate('customers')" title="View leads">↗</div></div>
+      <div class="stat-val">${leads}</div>
+      <div class="stat-sub light">↑ In pipeline</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-hatch"></div>
+      <div class="stat-card-top"><div class="stat-label">Open Estimates</div><div class="stat-arrow" onclick="navigate('estimates')" title="View estimates">↗</div></div>
+      <div class="stat-val">${openEst}</div>
+      <div class="stat-sub light">Awaiting response</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-hatch"></div>
+      <div class="stat-card-top"><div class="stat-label">Pipeline Value</div><div class="stat-arrow" onclick="navigate('estimates')" title="View estimates">↗</div></div>
+      <div class="stat-val" style="font-size:26px;letter-spacing:-1px">${$c(pipe)}</div>
+      <div class="stat-sub light">${wr}% close rate</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-hatch"></div>
+      <div class="stat-card-top"><div class="stat-label">Gross Profit</div><div class="stat-arrow" onclick="navigate('estimates')" title="View estimates">↗</div></div>
+      <div class="stat-val" style="font-size:26px;letter-spacing:-1px;color:${grossProfit>0?'var(--grn)':'var(--text)'}">${marginsArr.length>0?$c(grossProfit):'—'}</div>
+      <div class="stat-sub light">${marginsArr.length>0?`Across ${marginsArr.length} priced estimate${marginsArr.length>1?'s':''}` : 'Add costs to estimates'}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-hatch"></div>
+      <div class="stat-card-top"><div class="stat-label">Avg Profit Margin</div><div class="stat-arrow" onclick="navigate('estimates')" title="View estimates">↗</div></div>
+      <div class="stat-val" style="font-size:32px;color:${marginColor}">${avgMargin!==null?avgMargin.toFixed(1)+'%':'—'}</div>
+      <div class="stat-sub light">${avgMargin===null?'Add costs to estimates':avgMargin>=40?'↑ Strong margin':avgMargin>=25?'⚠ Watch costs':'↓ Below target'}</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="ch"><div class="ct">Recent Customers</div><button class="btn btn-secondary btn-sm" onclick="navigate('customers')">View All →</button></div>
+        ${recent.length===0 ? `<div class="empty"><div class="empty-ico" style="font-size:38px">👋</div><div class="empty-t">No customers yet</div><div class="empty-s">Add your first lead to get started</div><button class="btn btn-primary" style="margin-top:14px" onclick="openCustModal()">＋ Add First Lead</button></div>` : `
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Name</th><th>Status</th><th>Phone</th><th>Added</th></tr></thead>
+          <tbody>${recent.map(c=>`<tr onclick="navigate('customer','${c.id}')">
+            <td><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:var(--grn);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0">${ini(c.name)}</div><div><div class="tn">${c.name}</div><div class="ts">${c.city?c.city+(c.state?', '+c.state:''):c.email||''}</div></div></div></td>
+            <td>${bdg(c.status)}</td><td>${c.phone||'—'}</td><td>${ago(c.createdAt)}</td>
+          </tr>`).join('')}</tbody>
+        </table></div>`}
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Lead Sources</div></div>
+        <div class="cb">${topSrc.length===0?`<div class="t-muted" style="text-align:center;padding:8px">No data yet</div>`:
+          topSrc.map(([s,n])=>`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div style="font-size:13px;font-weight:500">${SOURCES[s]||s}</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:80px;height:5px;background:var(--bg);border-radius:3px;overflow:hidden"><div style="width:${Math.round(n/CS.length*100)}%;height:100%;background:var(--grn);border-radius:3px"></div></div>
+              <span style="font-size:12px;font-weight:700;color:var(--muted);min-width:14px;text-align:right">${n}</span>
+            </div></div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="ch">
+          <div class="ct">Pipeline</div>
+          <button class="btn btn-secondary btn-sm" style="font-size:11.5px;padding:5px 10px" onclick="navigate('pipeline')">＋ New</button>
+        </div>
+        <div style="padding:8px 0">
+          ${Object.entries(CSTAT).map(([k])=>{
+            const items=CS.filter(c=>c.status===k);
+            if(!items.length) return '';
+            const icoMap={new_lead:'🔵',contacted:'🟣',active_estimate:'🟠',estimate_sent:'🟡',job_won:'🟢',job_in_progress:'🔷',job_complete:'✅',job_lost:'🔴',inactive:'⚪'};
+            return items.slice(0,2).map(c=>`<div onclick="navigate('customer','${c.id}')" style="display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;transition:background .1s;border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+              <span style="font-size:13px">${icoMap[k]||'⚪'}</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
+                <div style="font-size:11px;color:var(--muted)">${CSTAT[k]}</div>
+              </div>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="var(--light)" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>`).join('');
+          }).filter(Boolean).join('')||`<div class="empty" style="padding:24px">No data yet</div>`}
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid var(--border)">
+          <button class="btn btn-secondary" style="width:100%;justify-content:center;font-size:13px" onclick="navigate('pipeline')">View Full Pipeline →</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Status Breakdown</div></div>
+        <div style="padding:4px 8px 12px">
+          ${Object.entries(CSTAT).map(([k])=>{ const n=CS.filter(c=>c.status===k).length; return n?`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:8px;cursor:pointer;transition:background .1s" onclick="navigate('customers')" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">${bdg(k)}<span style="font-size:13px;font-weight:700">${n}</span></div>`:'' }).filter(Boolean).join('')||`<div class="t-muted" style="text-align:center;padding:16px">No data yet</div>`}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function vProductionCalendar(year, month) {
+  const now = new Date();
+  const y = year  != null ? year  : now.getFullYear();
+  const m = month != null ? month : now.getMonth();
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DOWS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const WO_COLORS = { new:'#3B82F6', upcoming:'#7C3AED', in_progress:'#C2410C', quality_control:'#B45309', completed:'#047857', closed:'#15803D' };
+  const years = [y-1, y, y+1];
+
+  const WOS = getWorkOrders().filter(w => w.scheduledDate);
+  const woMap = {};
+  WOS.forEach(w => {
+    if (!woMap[w.scheduledDate]) woMap[w.scheduledDate] = [];
+    woMap[w.scheduledDate].push(w);
+  });
+
+  const firstDay    = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const daysInPrev  = new Date(y, m, 0).getDate();
+  const todayStr    = now.toISOString().slice(0,10);
+
+  const cells = [];
+  for (let i = firstDay - 1; i >= 0; i--)
+    cells.push({ day: daysInPrev - i, thisMonth: false, date: null });
+  for (let d = 1; d <= daysInMonth; d++) {
+    const mm = String(m+1).padStart(2,'0'), dd = String(d).padStart(2,'0');
+    cells.push({ day: d, thisMonth: true, date: `${y}-${mm}-${dd}` });
+  }
+  let next = 1;
+  while (cells.length % 7 !== 0) cells.push({ day: next++, thisMonth: false, date: null });
+
+  const prevM = m === 0 ? 11 : m - 1, prevY = m === 0 ? y - 1 : y;
+  const nextM = m === 11 ? 0  : m + 1, nextY = m === 11 ? y + 1 : y;
+
+  return `
+  <div style="margin-top:28px">
+    <div style="margin-bottom:12px">
+      <div style="font-size:17px;font-weight:800;margin-bottom:10px">Production Calendar</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn btn-secondary btn-sm" onclick="renderCal(${prevY},${prevM})" style="flex-shrink:0">‹ Prev</button>
+        <select class="fsel" style="flex:1" onchange="renderCal(${y},parseInt(this.value))">
+          ${MONTHS.map((mn,i)=>`<option value="${i}" ${i===m?'selected':''}>${mn}</option>`).join('')}
+        </select>
+        <select class="fsel" style="flex:1" onchange="renderCal(parseInt(this.value),${m})">
+          ${years.map(yr=>`<option value="${yr}" ${yr===y?'selected':''}>${yr}</option>`).join('')}
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="renderCal(${nextY},${nextM})" style="flex-shrink:0">Next ›</button>
+        <button class="btn btn-ghost btn-sm" onclick="renderCal(${now.getFullYear()},${now.getMonth()})" style="flex-shrink:0">Today</button>
+      </div>
+    </div>
+    <div class="card" style="overflow:hidden">
+      <div class="cal-header">${DOWS.map(d=>`<div class="cal-dow">${d}</div>`).join('')}</div>
+      <div class="cal-grid">${cells.map(cell => {
+        const wos = cell.date ? (woMap[cell.date] || []) : [];
+        const isToday = cell.date === todayStr;
+        return `<div class="cal-day${!cell.thisMonth?' other-month':''}${isToday?' today':''}">
+          <div class="cal-day-num">${cell.day}</div>
+          ${wos.slice(0,3).map(w => {
+            const col = WO_COLORS[w.woStatus] || '#6B7280';
+            const c = getCustomer(w.customerId);
+            const label = c?.name?.trim().split(' ').pop() || w.title.split(/\s+/)[0];
+            return `<button class="cal-chip" style="background:${col}22;color:${col}" onclick="openWODetailModal('${w.id}')">${label}</button>`;
+          }).join('')}
+          ${wos.length > 3 ? `<div style="font-size:10px;color:var(--muted);padding:1px 5px;font-weight:600">+${wos.length-3} more</div>` : ''}
+        </div>`;
+      }).join('')}</div>
+    </div>
+  </div>`;
+}
+
+function renderCal(y, m) {
+  const el = document.getElementById('prod-cal');
+  if (el) el.innerHTML = vProductionCalendar(y, m);
+}
+
+function openWODetailModal(id) {
+  const w = getWorkOrder(id);
+  if (!w) return;
+  const c = getCustomer(w.customerId);
+  const e = getEstimate(w.estimateId);
+  const WO_COLORS = { new:'#3B82F6', upcoming:'#7C3AED', in_progress:'#C2410C', quality_control:'#B45309', completed:'#047857', closed:'#15803D' };
+  const col = WO_COLORS[w.woStatus] || '#6B7280';
+  const dateStr = w.scheduledDate
+    ? new Date(w.scheduledDate + 'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})
+    : 'Not scheduled';
+  document.getElementById('modal-root').innerHTML = `
+  <div class="modal-ov" onclick="if(event.target===this)closeModal()">
+  <div class="modal" style="max-width:500px">
+    <div class="mh">
+      <div>
+        <div class="mt">${w.title}</div>
+        <div style="margin-top:4px"><span class="badge badge-wo_${w.woStatus}">${WOSTAT[w.woStatus]||w.woStatus}</span></div>
+      </div>
+      <button class="mc" onclick="closeModal()">✕</button>
+    </div>
+    <div class="mb" style="padding:20px 24px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Customer</div>
+          <div style="font-size:14px;font-weight:600;cursor:pointer;color:var(--grn)" onclick="closeModal();navigate('customer','${c?.id||''}')">${c?.name||'—'}</div>
+          ${c?.address?`<div style="font-size:12.5px;color:var(--muted);margin-top:2px">${c.address}${c.city?', '+c.city:''}</div>`:''}
+        </div>
+        <div><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Scheduled</div>
+          <div style="font-size:13.5px;font-weight:600">${dateStr}</div>
+        </div>
+        <div><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Assigned To</div>
+          <div style="font-size:13.5px;font-weight:600">${w.assignedTo||'Unassigned'}</div>
+        </div>
+        <div><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Job Value</div>
+          <div style="font-size:16px;font-weight:800;color:var(--grn)">${$c(w.total)}</div>
+        </div>
+      </div>
+      ${w.notes?`<div style="background:var(--bg);border-radius:var(--rs);padding:12px 14px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Notes</div><div style="font-size:13.5px;color:var(--text);line-height:1.6">${w.notes}</div></div>`:''}
+      ${e?`<div style="background:var(--grn-light);border-radius:var(--rs);padding:10px 14px;font-size:13px;color:var(--grn);font-weight:500">🔗 Linked estimate: <strong>${e.title}</strong> · ${$c(e.total)}</div>`:''}
+    </div>
+    <div class="mf" style="justify-content:space-between">
+      <button class="btn btn-secondary" onclick="closeModal();openWOModal('${w.id}')">✏️ Edit Work Order</button>
+      <button class="btn btn-primary" onclick="closeModal()">Close</button>
+    </div>
+  </div></div>`;
+}
+// ═══════════════════════════════════════════════
+function vCustomers() {
+  return `<div class="card">
+    <div style="display:flex;gap:12px;padding:12px;border-bottom:1px solid var(--border);background:#FAFAFA">
+      <select class="fsel" style="flex:1" id="cs-stat" onchange="filterC()"><option value="">All Statuses</option>${Object.entries(CSTAT).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
+      <select class="fsel" style="flex:1" id="cs-src" onchange="filterC()"><option value="">All Sources</option>${Object.entries(SOURCES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
+      <select class="fsel" style="flex:1" id="cs-sort" onchange="filterC()"><option value="newest">Newest First</option><option value="oldest">Oldest First</option><option value="az">Name A→Z</option><option value="status">By Status</option></select>
+    </div>
+    <div class="fbar">
+      <div class="si-wrap"><span class="sic">🔍</span><input type="text" class="search-input" id="cs-q" placeholder="Search name, phone, email, city..." oninput="filterC()"></div>
+    </div>
+    <div id="ctbl">${custTable(getCustomers())}</div>
+  </div>`;
+}
+function custTable(arr) {
+  if (!arr.length) return `<div class="empty"><div class="empty-ico">👥</div><div class="empty-t">No customers found</div><div class="empty-s">Try adjusting your filters</div></div>`;
+  return `<div class="tbl-wrap"><table>
+    <thead><tr><th>Name</th><th>Status</th><th>Phone</th><th>Email</th><th>Location</th><th>Source</th><th>Est.</th><th>Added</th></tr></thead>
+    <tbody>${arr.map(c=>`<tr onclick="navigate('customer','${c.id}')">
+      <td><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:var(--grn);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0">${ini(c.name)}</div><div><div class="tn">${c.name}</div>${c.email?`<div class="ts">${c.email}</div>`:''}</div></div></td>
+      <td>${bdg(c.status)}</td>
+      <td>${c.phone||'—'}</td>
+      <td>${c.email||'—'}</td>
+      <td><div class="tn">${c.address||'—'}</div>${c.city?`<div class="ts">${c.city}${c.state?', '+c.state:''} ${c.zip||''}</div>`:''}</td>
+      <td>${SOURCES[c.source]||c.source||'—'}</td>
+      <td><span class="fw-bold">${getEstimates(c.id).length}</span></td>
+      <td>${fdate(c.createdAt)}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+function filterC() {
+  const q=(document.getElementById('cs-q')?.value||'').toLowerCase();
+  const st=document.getElementById('cs-stat')?.value||'';
+  const src=document.getElementById('cs-src')?.value||'';
+  const sort=document.getElementById('cs-sort')?.value||'newest';
+  let arr = getCustomers().filter(c=>{
+    const ms=!q||c.name.toLowerCase().includes(q)||(c.email||'').toLowerCase().includes(q)||(c.phone||'').includes(q)||(c.city||'').toLowerCase().includes(q);
+    return ms&&(!st||c.status===st)&&(!src||c.source===src);
+  });
+  if(sort==='newest') arr.sort((a,b)=>b.createdAt-a.createdAt);
+  else if(sort==='oldest') arr.sort((a,b)=>a.createdAt-b.createdAt);
+  else if(sort==='az') arr.sort((a,b)=>a.name.localeCompare(b.name));
+  else arr.sort((a,b)=>a.status.localeCompare(b.status));
+  document.getElementById('ctbl').innerHTML = custTable(arr);
+}
+
+// ═══════════════════════════════════════════════
+// PIPELINE VIEW (with drag-and-drop)
+// ═══════════════════════════════════════════════
+let _dragCid = null;
+
+function vPipeline() {
+  const CS = getCustomers();
+  const stages = [
+    {k:'new_lead',c:'#2563EB',bg:'#EFF6FF'},{k:'contacted',c:'#7C3AED',bg:'#F5F3FF'},
+    {k:'active_estimate',c:'#C2410C',bg:'#FFF7ED'},{k:'estimate_sent',c:'#B45309',bg:'#FFFBEB'},
+    {k:'job_won',c:'#047857',bg:'#ECFDF5'},{k:'job_in_progress',c:'#1D4ED8',bg:'#EFF6FF'},
+    {k:'job_complete',c:'#15803D',bg:'#F0FDF4'},{k:'job_lost',c:'#DC2626',bg:'#FEF2F2'}
+  ];
+  return `<div class="pipe-scroll"><div class="pipeline">${stages.map(s=>{
+    const items = CS.filter(c=>c.status===s.k);
+    const estVal = items.map(c=>getEstimates(c.id).reduce((sum,e)=>sum+(e.total||0),0));
+    return `<div class="pc">
+      <div class="pch" style="background:${s.bg};color:${s.c}">
+        ${CSTAT[s.k]}
+        <span style="background:${s.c};color:#fff;border-radius:12px;padding:1px 7px;font-size:11px" id="pcnt-${s.k}">${items.length}</span>
+      </div>
+      <div class="pcb" id="pcb-${s.k}"
+        ondragover="pipeDragOver(event,'${s.k}')"
+        ondragenter="pipeDragEnter(event,'${s.k}')"
+        ondragleave="pipeDragLeave(event,'${s.k}')"
+        ondrop="pipeDrop(event,'${s.k}')">
+        ${items.length===0
+          ? `<div class="pipe-empty-hint" style="font-size:12px;color:var(--light);text-align:center;padding:20px 8px;border:2px dashed transparent;border-radius:8px">Drop here</div>`
+          : items.map((c,i)=>`
+            <div class="pcard"
+              draggable="true"
+              data-cid="${c.id}"
+              ondragstart="pipeDragStart(event,'${c.id}')"
+              ondragend="pipeDragEnd(event)"
+              onclick="navigate('customer','${c.id}')">
+              <div class="pcard-drag-handle" style="font-size:10px;color:var(--light);margin-bottom:4px;letter-spacing:1px">⠿⠿</div>
+              <div class="pcard-nm">${c.name}</div>
+              <div class="pcard-s">${c.city||c.phone||'No contact info'}</div>
+              ${getEstimates(c.id).length>0?`<div style="margin-top:5px;font-size:11px;color:var(--muted)">${getEstimates(c.id).length} est. · ${$c(estVal[i])}</div>`:''}
+            </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('')}</div></div>
+  <div id="pipe-toast" style="position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--grn);color:#fff;padding:10px 22px;border-radius:100px;font-size:13.5px;font-weight:600;box-shadow:var(--shadowlg);z-index:9999;transition:transform .25s ease,opacity .25s;opacity:0;pointer-events:none"></div>`;
+}
+
+function pipeDragStart(ev, cid) {
+  _dragCid = cid;
+  ev.dataTransfer.effectAllowed = 'move';
+  ev.dataTransfer.setData('text/plain', cid);
+  setTimeout(() => { const el = document.querySelector(`[data-cid="${cid}"]`); if(el) el.classList.add('dragging'); }, 0);
+}
+function pipeDragEnd(ev) {
+  _dragCid = null;
+  document.querySelectorAll('.pcard').forEach(el => el.classList.remove('dragging'));
+  document.querySelectorAll('.pcb').forEach(el => { el.classList.remove('drag-over'); });
+}
+function pipeDragEnter(ev, status) {
+  ev.preventDefault();
+  const col = document.getElementById('pcb-' + status);
+  if (col) col.classList.add('drag-over');
+}
+function pipeDragOver(ev, status) {
+  ev.preventDefault();
+  ev.dataTransfer.dropEffect = 'move';
+}
+function pipeDragLeave(ev, status) {
+  // Only remove if leaving the column itself, not a child
+  const col = document.getElementById('pcb-' + status);
+  if (col && !col.contains(ev.relatedTarget)) col.classList.remove('drag-over');
+}
+function pipeDrop(ev, newStatus) {
+  ev.preventDefault();
+  const cid = ev.dataTransfer.getData('text/plain') || _dragCid;
+  const col = document.getElementById('pcb-' + newStatus);
+  if (col) col.classList.remove('drag-over');
+  if (!cid) return;
+  const c = getCustomer(cid);
+  if (!c || c.status === newStatus) return;
+  const oldStatus = c.status;
+  updateCustomer(cid, { status: newStatus });
+  if (newStatus === 'job_won' && oldStatus !== 'job_won') syncWOsForCustomer(cid);
+  // Re-render pipeline in place (fast, no full re-render)
+  renderPipelineInPlace();
+  showPipeToast(`${c.name} → ${CSTAT[newStatus]}`);
+}
+
+function renderPipelineInPlace() {
+  const CS = getCustomers();
+  const stages = ['new_lead','contacted','active_estimate','estimate_sent','job_won','job_in_progress','job_complete','job_lost'];
+  const stageColors = {new_lead:'#2563EB',contacted:'#7C3AED',active_estimate:'#C2410C',estimate_sent:'#B45309',job_won:'#047857',job_in_progress:'#1D4ED8',job_complete:'#15803D',job_lost:'#DC2626'};
+  stages.forEach(sk => {
+    const col = document.getElementById('pcb-' + sk);
+    const cnt = document.getElementById('pcnt-' + sk);
+    if (!col) return;
+    const items = CS.filter(c => c.status === sk);
+    if (cnt) cnt.textContent = items.length;
+    if (items.length === 0) {
+      col.innerHTML = `<div class="pipe-empty-hint" style="font-size:12px;color:var(--light);text-align:center;padding:20px 8px;border:2px dashed transparent;border-radius:8px">Drop here</div>`;
+    } else {
+      col.innerHTML = items.map(c => {
+        const ev = getEstimates(c.id).reduce((s,e)=>s+(e.total||0),0);
+        return `<div class="pcard" draggable="true" data-cid="${c.id}"
+          ondragstart="pipeDragStart(event,'${c.id}')"
+          ondragend="pipeDragEnd(event)"
+          onclick="navigate('customer','${c.id}')">
+          <div class="pcard-drag-handle" style="font-size:10px;color:var(--light);margin-bottom:4px;letter-spacing:1px">⠿⠿</div>
+          <div class="pcard-nm">${c.name}</div>
+          <div class="pcard-s">${c.city||c.phone||'No contact info'}</div>
+          ${getEstimates(c.id).length>0?`<div style="margin-top:5px;font-size:11px;color:var(--muted)">${getEstimates(c.id).length} est. · ${$c(ev)}</div>`:''}
+        </div>`;
+      }).join('');
+    }
+  });
+}
+
+function showPipeToast(msg) {
+  const t = document.getElementById('pipe-toast');
+  if (!t) return;
+  t.textContent = '✓ ' + msg;
+  t.style.opacity = '1';
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(t._to);
+  t._to = setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(-50%) translateY(60px)';
+  }, 2400);
+}
+
+// ═══════════════════════════════════════════════
+// CUSTOMER DETAIL VIEW
+// ═══════════════════════════════════════════════
+function vDetail() {
+  const c = getCustomer(state.cid);
+  if (!c) return `<div class="empty"><div class="empty-t">Customer not found</div></div>`;
+  const ES = getEstimates(c.id);
+  return `<div>
+    <div class="back" onclick="navigate('customers')">← Back to Customers</div>
+    <div class="dl">
+      <div>
+        <div class="prof-card">
+          <div class="prof-hd">
+            <div class="prof-av">${ini(c.name)}</div>
+            <div class="prof-nm">${c.name}</div>
+            <div style="margin-top:7px">${bdg(c.status)}</div>
+          </div>
+          <div class="prof-info">
+            ${c.phone?`<div class="ir"><div class="ii">📞</div><div><div class="il">Phone</div><div class="iv"><a href="tel:${c.phone}" style="color:inherit;text-decoration:none">${c.phone}</a></div></div></div>`:''}
+            ${c.email?`<div class="ir"><div class="ii">✉️</div><div><div class="il">Email</div><div class="iv"><a href="mailto:${c.email}" style="color:var(--orange);text-decoration:none">${c.email}</a></div></div></div>`:''}
+            ${c.address?`<div class="ir"><div class="ii">📍</div><div><div class="il">Address</div><div class="iv">${c.address}<br>${[c.city,c.state,c.zip].filter(Boolean).join(', ')}</div></div></div>`:''}
+            ${c.source?`<div class="ir"><div class="ii">📣</div><div><div class="il">Lead Source</div><div class="iv">${SOURCES[c.source]||c.source}</div></div></div>`:''}
+            <div class="ir"><div class="ii">📅</div><div><div class="il">Added</div><div class="iv">${fdate(c.createdAt)}</div></div></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:14px">
+          <div class="ch"><div class="ct">Update Status</div></div>
+          <div class="cb">
+            <select style="width:100%" onchange="quickStat('${c.id}',this.value)">
+              ${Object.entries(CSTAT).map(([k,v])=>`<option value="${k}" ${c.status===k?'selected':''}>${v}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="card" style="margin-top:14px">
+          <div class="ch"><div class="ct">Notes</div><button class="btn btn-ghost btn-sm" onclick="saveNotes('${c.id}')">💾 Save</button></div>
+          <div class="cb"><textarea id="n-${c.id}" style="width:100%;min-height:110px;border:1.5px solid var(--border);border-radius:7px;padding:9px;font-family:var(--font);font-size:13.5px;resize:vertical;outline:none" placeholder="Job details, color preferences, access info...">${c.notes||''}</textarea></div>
+        </div>
+      </div>
+      <div>
+        <div class="tabs">
+          <div class="tab ${state.tab==='estimates'?'active':''}" onclick="setTab('estimates')">Estimates (${ES.length})</div>
+          <div class="tab ${state.tab==='files'?'active':''}" onclick="setTab('files')">Files & Docs (${(c.files||[]).length})</div>
+          <div class="tab ${state.tab==='payments'?'active':''}" onclick="setTab('payments')">Payments (${getPayments(c.id).length})</div>
+        </div>
+        ${state.tab==='estimates' ? detailEst(c,ES) : state.tab==='payments' ? detailPayments(c) : detailFiles(c)}
+      </div>
+    </div>
+  </div>`;
+}
+
+function detailEst(c, ES) {
+  return `<div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-size:15px;font-weight:700">Estimates</div>
+      <button class="btn btn-primary btn-sm" onclick="openEstModal('${c.id}')">＋ New Estimate</button>
+    </div>
+    ${ES.length===0?`<div class="empty" style="padding:36px"><div class="empty-ico">📄</div><div class="empty-t">No estimates yet</div><div class="empty-s">Create the first estimate for this customer</div></div>`:
+    ES.map(e=>`<div class="card" style="margin-bottom:12px">
+      <div style="padding:15px 18px;display:flex;align-items:flex-start;justify-content:space-between">
+        <div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:5px">${e.title}</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${bdg(c.status)}<span class="t-muted">Created ${fdate(e.createdAt)}</span>${e.validUntil?`<span class="t-muted">· Valid until ${e.validUntil}</span>`:''}</div>
+          ${e.description?`<div style="margin-top:7px;font-size:13px;color:var(--muted)">${e.description}</div>`:''}
+        </div>
+        <div style="text-align:right;flex-shrink:0;margin-left:14px">
+          <div style="font-size:22px;font-weight:800;color:var(--grn)">${$c(e.total)}</div>
+          <div style="display:flex;gap:5px;margin-top:7px;justify-content:flex-end">
+            <button class="btn btn-secondary btn-xs" onclick="downloadEstPDF('${e.id}');event.stopPropagation()">⬇️ PDF</button>
+            <button class="btn btn-secondary btn-xs" onclick="openEditEst('${e.id}');event.stopPropagation()">✏️ Edit</button>
+            <button class="btn btn-danger btn-xs" onclick="delEst('${e.id}');event.stopPropagation()">🗑️</button>
+          </div>
+        </div>
+      </div>
+      ${e.lineItems?.length?`<div style="border-top:1px solid var(--border);padding:0 18px 14px">
+        <table style="width:100%;border-collapse:collapse;margin-top:10px">
+          <thead><tr><th style="text-align:left;padding:7px 10px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;background:var(--bg)">Description</th><th style="text-align:right;padding:7px 10px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;background:var(--bg)">Qty</th><th style="text-align:right;padding:7px 10px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;background:var(--bg)">Unit Price</th><th style="text-align:right;padding:7px 10px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;background:var(--bg)">Total</th></tr></thead>
+          <tbody>${e.lineItems.map(li=>`<tr><td style="padding:7px 10px;border-bottom:1px solid var(--border);font-size:13px">${li.description||'—'}</td><td style="padding:7px 10px;text-align:right;border-bottom:1px solid var(--border);font-size:13px">${li.qty||1} ${li.unit||''}</td><td style="padding:7px 10px;text-align:right;border-bottom:1px solid var(--border);font-size:13px">${$c(li.unitPrice)}</td><td style="padding:7px 10px;text-align:right;border-bottom:1px solid var(--border);font-size:13px;font-weight:600">${$c(li.total)}</td></tr>`).join('')}</tbody>
+        </table>
+        <div style="text-align:right;padding-top:10px;border-top:1px solid var(--border);margin-top:2px">
+          <div class="t-muted">Subtotal: ${$c(e.subtotal)}</div>
+          ${e.taxRate>0?`<div class="t-muted">Tax (${e.taxRate}%): ${$c(e.tax)}</div>`:''}
+          <div style="font-size:15px;font-weight:800;margin-top:3px">Total: ${$c(e.total)}</div>
+        </div>
+      </div>`:''}
+    </div>`).join('')}
+  </div>`;
+}
+
+function detailFiles(c) {
+  const files = c.files||[];
+  return `<div>
+    <div class="fzone" onclick="document.getElementById('fu-${c.id}').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event,'${c.id}')">
+      <div class="fzone-ico">📁</div>
+      <div class="fzone-txt"><strong>Click to upload</strong> or drag & drop</div>
+      <div class="fzone-sub">Photos, PDFs, contracts, invoices — max 5 MB each</div>
+    </div>
+    <input type="file" id="fu-${c.id}" multiple style="display:none" onchange="handleInput(event,'${c.id}')">
+    ${files.length?`<div class="flist">${files.map(f=>`<div class="fitem">
+      <div class="fitem-ico">${ficon(f.type)}</div>
+      <div class="fitem-info"><div class="fitem-nm">${f.name}</div><div class="fitem-meta">${fsz(f.size)} · ${fdate(f.uploadedAt)}</div></div>
+      <div style="display:flex;gap:5px">
+        <button class="btn btn-secondary btn-xs" onclick="dlFile('${c.id}','${f.id}')">⬇️</button>
+        <button class="btn btn-danger btn-xs" onclick="delFileConfirm('${c.id}','${f.id}')">🗑️</button>
+      </div>
+    </div>`).join('')}</div>`:''}
+  </div>`;
+}
+
+function detailPayments(c) {
+  const PAYS = getPayments(c.id).sort((a,b) => new Date(b.date) - new Date(a.date));
+  const ES    = getEstimates(c.id);
+  const totalBilled = ES.reduce((s,e) => s+(e.total||0), 0);
+  const totalPaid   = PAYS.reduce((s,p) => s+(p.amount||0), 0);
+  const balance     = totalBilled - totalPaid;
+  const pct         = totalBilled > 0 ? Math.min(100, totalPaid/totalBilled*100) : 0;
+  const METHODS = { check:'💳 Check', cash:'💵 Cash', credit_card:'🖱️ Credit Card', bank_transfer:'🏦 Bank Transfer', venmo:'📱 Venmo', zelle:'📲 Zelle', other:'🔖 Other' };
+
+  return `<div>
+    <!-- BALANCE SUMMARY -->
+    <div class="card" style="margin-bottom:16px">
+      <div style="padding:16px 18px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:14px">
+          <div><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Total Billed</div>
+            <div style="font-size:20px;font-weight:800">${$c(totalBilled)}</div></div>
+          <div><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Total Paid</div>
+            <div style="font-size:20px;font-weight:800;color:var(--grn)">${$c(totalPaid)}</div></div>
+          <div><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Balance Due</div>
+            <div style="font-size:20px;font-weight:800;color:${balance>0?'#DC2626':balance<0?'#7C3AED':'var(--grn)'}">${$c(balance)}</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="flex:1"><div class="pay-balance-bar"><div class="pay-balance-fill" style="width:${pct}%"></div></div></div>
+          <div style="font-size:12px;font-weight:700;color:var(--muted);flex-shrink:0">${pct.toFixed(0)}% paid</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADD PAYMENT -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-size:15px;font-weight:700">Payment History</div>
+      <button class="btn btn-primary btn-sm" onclick="openPaymentModal('${c.id}')">＋ Record Payment</button>
+    </div>
+
+    ${PAYS.length===0
+      ? `<div class="empty" style="padding:32px"><div class="empty-ico">💰</div><div class="empty-t">No payments recorded yet</div><div class="empty-s">Use "Record Payment" to log a deposit, progress payment, or final payment.</div></div>`
+      : `<div class="card">
+          ${PAYS.map(p => {
+            const e = getEstimate(p.estimateId);
+            return `<div class="pay-row">
+              <div style="flex:1">
+                <div style="font-weight:600">${METHODS[p.method]||p.method}</div>
+                <div style="font-size:12px;color:var(--muted);margin-top:2px">
+                  ${fdate(new Date(p.date+'T12:00:00').getTime())}
+                  ${e?` · <span style="color:var(--grn)">${e.title}</span>`:''}
+                  ${p.reference?` · Ref: ${p.reference}`:''}
+                </div>
+                ${p.notes?`<div style="font-size:12px;color:var(--muted);margin-top:2px">${p.notes}</div>`:''}
+              </div>
+              <div style="font-size:17px;font-weight:800;color:var(--grn);flex-shrink:0">${$c(p.amount)}</div>
+              <div style="display:flex;gap:4px;flex-shrink:0">
+                <button class="btn btn-ghost btn-xs" onclick="openPaymentModal('${c.id}','${p.id}')">✏️</button>
+                <button class="btn btn-danger btn-xs" onclick="delPaymentConfirm('${p.id}')">🗑️</button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`}
+  </div>`;
+}
+// ═══════════════════════════════════════════════
+function vEstimates() {
+  return `<div class="card">
+    <div style="display:flex;gap:12px;padding:12px;border-bottom:1px solid var(--border);background:#FAFAFA">
+      <select class="fsel" style="flex:1" id="es-stat" onchange="filterE()"><option value="">All Customer Statuses</option>${Object.entries(CSTAT).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
+      <select class="fsel" style="flex:1" id="es-sort" onchange="filterE()"><option value="newest">Newest First</option><option value="oldest">Oldest First</option><option value="value_hi">Highest Value</option><option value="value_lo">Lowest Value</option></select>
+    </div>
+    <div class="fbar">
+      <div class="si-wrap"><span class="sic">🔍</span><input type="text" class="search-input" id="es-q" placeholder="Search estimates or customer name..." oninput="filterE()"></div>
+    </div>
+    <div id="etbl">${estTable(getEstimates())}</div>
+  </div>`;
+}
+function estTable(arr) {
+  if (!arr.length) return `<div class="empty"><div class="empty-ico">📄</div><div class="empty-t">No estimates yet</div><div class="empty-s">Add estimates from a customer's profile</div></div>`;
+  const sorted = [...arr].sort((a,b)=>b.createdAt-a.createdAt);
+
+  const rows = sorted.map(e => {
+    const c = getCustomer(e.customerId);
+    const lastName = c ? c.name.trim().split(' ').pop() : '';
+    const addrDisplay = c?.address
+      ? `${c.address} <span style="color:var(--muted);font-weight:400">(${lastName})</span>`
+      : c ? `<span style="color:var(--muted)">${c.name}</span>` : '—';
+    const { rev, cost, gp } = estProfit(e);
+    const gpPct = rev > 0 ? (gp / rev * 100).toFixed(1) : null;
+    const gpColor = gp >= 0 ? 'var(--grn)' : '#DC2626';
+    return { e, c, addrDisplay, rev, cost, gp, gpPct, gpColor };
+  });
+
+  const totalRev  = rows.reduce((s,r) => s + r.rev, 0);
+  const totalCost = rows.reduce((s,r) => s + r.cost, 0);
+  const totalGP   = totalRev - totalCost;
+  const blended   = totalRev > 0 ? (totalGP / totalRev * 100) : null;
+  const anyHasCost = rows.length > 0;
+
+  return `<div class="tbl-wrap"><table>
+    <thead><tr><th>Title</th><th>Address</th><th>Status</th><th>Total</th><th>Gross Profit</th><th>Created</th><th></th></tr></thead>
+    <tbody>${rows.map(({e,c,addrDisplay,gp,gpPct,gpColor})=>`<tr onclick="navigate('customer','${e.customerId||''}')">
+        <td class="tn">${e.title}</td>
+        <td><span style="cursor:pointer" onclick="navigate('customer','${c?.id||''}');event.stopPropagation()">${addrDisplay}</span></td>
+        <td>${c ? bdg(c.status) : '—'}</td>
+        <td style="font-weight:700">${$c(e.total)}</td>
+        <td><span style="font-weight:700;color:${gpColor}">${$c(gp)}</span>${gpPct!==null?`<span style="font-size:11px;color:var(--muted);margin-left:5px">${gpPct}%</span>`:''}</td>
+        <td>${fdate(e.createdAt)}</td>
+        <td><div style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-xs" title="Download PDF" onclick="downloadEstPDF('${e.id}');event.stopPropagation()">⬇️</button>
+          <button class="btn btn-ghost btn-xs" onclick="openEditEst('${e.id}');event.stopPropagation()">✏️</button>
+          <button class="btn btn-danger btn-xs" onclick="delEst('${e.id}');event.stopPropagation()">🗑️</button>
+        </div></td>
+      </tr>`).join('')}</tbody>
+    ${anyHasCost ? `<tfoot><tr>
+      <td colspan="3" style="padding:12px 18px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;background:var(--bg);border-top:2px solid var(--border)">Projected Totals</td>
+      <td style="padding:12px 18px;font-weight:800;font-size:14px;background:var(--bg);border-top:2px solid var(--border)">${$c(totalRev)}</td>
+      <td style="padding:12px 18px;background:var(--bg);border-top:2px solid var(--border)">
+        <span style="font-weight:800;font-size:14px;color:${totalGP>=0?'var(--grn)':'#DC2626'}">${$c(totalGP)}</span>
+        ${blended!==null?`<span style="font-size:11px;color:var(--muted);margin-left:5px">${blended.toFixed(1)}%</span>`:''}
+      </td>
+      <td colspan="2" style="background:var(--bg);border-top:2px solid var(--border)"></td>
+    </tr></tfoot>` : ''}
+  </table></div>`;
+}
+function filterE() {
+  const q   = (document.getElementById('es-q')?.value||'').toLowerCase();
+  const st  = document.getElementById('es-stat')?.value||'';
+  const srt = document.getElementById('es-sort')?.value||'newest';
+  let arr = getEstimates().filter(e => {
+    const c = getCustomer(e.customerId);
+    const matchQ  = !q || e.title.toLowerCase().includes(q) || (c && c.name.toLowerCase().includes(q));
+    const matchSt = !st || (c && c.status === st);
+    return matchQ && matchSt;
+  });
+  if (srt==='oldest')   arr.sort((a,b)=>a.createdAt-b.createdAt);
+  else if (srt==='value_hi') arr.sort((a,b)=>(b.total||0)-(a.total||0));
+  else if (srt==='value_lo') arr.sort((a,b)=>(a.total||0)-(b.total||0));
+  else arr.sort((a,b)=>b.createdAt-a.createdAt);
+  document.getElementById('etbl').innerHTML = estTable(arr);
+}
+
+// ═══════════════════════════════════════════════
+// PRODUCTION VIEW
+// ═══════════════════════════════════════════════
+let _woFilters = new Set(Object.keys(WOSTAT)); // all checked by default
+
+function vProduction() {
+  const WOS = getWorkOrders();
+  const counts = {};
+  Object.keys(WOSTAT).forEach(k => counts[k] = WOS.filter(w => w.woStatus===k).length);
+  const total = WOS.length;
+  const newWOs = WOS.filter(w => w.woStatus === 'new').sort((a,b) => b.createdAt - a.createdAt);
+  const active = WOS.filter(w => !['new','completed','closed'].includes(w.woStatus)).length;
+  const totalVal = WOS.reduce((s,w) => s+(w.total||0), 0);
+  const closedVal = WOS.filter(w => w.woStatus==='closed').reduce((s,w) => s+(w.total||0), 0);
+
+  // Active list excludes 'new' status; apply filters only here
+  const activeFilters = new Set([..._woFilters].filter(k => k !== 'new'));
+  const activeWOs = WOS.filter(w => w.woStatus !== 'new' && activeFilters.has(w.woStatus))
+    .sort((a,b) => {
+      const order = ['upcoming','in_progress','quality_control','completed','closed'];
+      return order.indexOf(a.woStatus) - order.indexOf(b.woStatus) || b.updatedAt - a.updatedAt;
+    });
+
+  const woTableHeader = () => `
+    <div style="display:grid;grid-template-columns:44px 1fr 155px 130px 130px 110px 80px;gap:14px;padding:10px 20px;background:#FAFAFA;border-bottom:1px solid var(--border)">
+      <span style="font-size:11px;font-weight:700;color:var(--light);text-transform:uppercase">#</span>
+      <span style="font-size:11px;font-weight:700;color:var(--light);text-transform:uppercase">Job / Customer</span>
+      <span style="font-size:11px;font-weight:700;color:var(--light);text-transform:uppercase">Status</span>
+      <span style="font-size:11px;font-weight:700;color:var(--light);text-transform:uppercase">Scheduled</span>
+      <span style="font-size:11px;font-weight:700;color:var(--light);text-transform:uppercase">Assigned To</span>
+      <span style="font-size:11px;font-weight:700;color:var(--light);text-transform:uppercase;text-align:right">Value</span>
+      <span style="font-size:11px;font-weight:700;color:var(--light);text-transform:uppercase;text-align:right">Actions</span>
+    </div>`;
+
+  const woRow = (w, idx) => {
+    const c = getCustomer(w.customerId);
+    const e = getEstimate(w.estimateId);
+    const woNum = `WO-${String(idx+1).padStart(3,'0')}`;
+    const dateStr = w.scheduledDate
+      ? new Date(w.scheduledDate+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
+      : 'Not scheduled';
+    return `<div class="wo-row" onclick="openWOModal('${w.id}')">
+      <span class="wo-num">${woNum}</span>
+      <div>
+        <div style="font-weight:700;font-size:13.5px;margin-bottom:2px">${w.title}</div>
+        <div style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px">
+          ${c ? `<span onclick="navigate('customer','${c.id}');event.stopPropagation()" style="color:var(--grn);cursor:pointer;font-weight:500">${c.name}</span>` : '—'}
+          ${e ? `<span style="color:var(--light)">·</span><span>${$c(e.total)}</span>` : ''}
+        </div>
+      </div>
+      <div>${woBdg(w.woStatus)}</div>
+      <div style="font-size:13px;color:${w.scheduledDate?'var(--text)':'var(--light)'}">${dateStr}</div>
+      <div style="font-size:13px;color:${w.assignedTo?'var(--text)':'var(--light)'}">${w.assignedTo||'Unassigned'}</div>
+      <div style="font-size:13.5px;font-weight:700;text-align:right">${$c(w.total)}</div>
+      <div style="display:flex;gap:4px;justify-content:flex-end" onclick="event.stopPropagation()">
+        <button class="btn btn-ghost btn-xs" onclick="openWOModal('${w.id}')">✏️</button>
+        <button class="btn btn-danger btn-xs" onclick="delWO('${w.id}')">🗑️</button>
+      </div>
+    </div>`;
+  };
+
+  return `
+  <!-- STAT CARDS -->
+  <div class="stats-grid" style="margin-bottom:20px">
+    <div class="stat-card dark">
+      <div class="stat-card-top"><div class="stat-label">New Work Orders</div><div class="stat-arrow">↗</div></div>
+      <div class="stat-val">${counts['new']||0}</div>
+      <div class="stat-sub">Awaiting scheduling</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-top"><div class="stat-label">Active Jobs</div><div class="stat-arrow">↗</div></div>
+      <div class="stat-val">${active}</div>
+      <div class="stat-sub light">In progress / QC</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-top"><div class="stat-label">Total Pipeline</div><div class="stat-arrow">↗</div></div>
+      <div class="stat-val" style="font-size:26px;letter-spacing:-1px">${$c(totalVal)}</div>
+      <div class="stat-sub light">All work orders</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-top"><div class="stat-label">Collected (Closed)</div><div class="stat-arrow">↗</div></div>
+      <div class="stat-val" style="font-size:26px;letter-spacing:-1px">${$c(closedVal)}</div>
+      <div class="stat-sub light">Paid & closed</div>
+    </div>
+  </div>
+
+  <!-- ① NEW WORK ORDERS -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div>
+      <div style="font-size:17px;font-weight:800;color:var(--text)">New Work Orders</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:2px">Jobs that moved to Won and are waiting to be scheduled</div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="openWOModal(null)">＋ Add Work Order</button>
+  </div>
+  <div class="card" style="margin-bottom:28px">
+    ${newWOs.length === 0
+      ? `<div class="empty" style="padding:36px 20px">
+          <div class="empty-ico">🎉</div>
+          <div class="empty-t">No new work orders</div>
+          <div class="empty-s">New work orders appear here automatically when a customer is marked as Job Won, or when an estimate is approved.</div>
+        </div>`
+      : `${woTableHeader()}
+         <div>${newWOs.map((w,i) => woRow(w,i)).join('')}</div>`}
+  </div>
+
+  <!-- ② ACTIVE & HISTORICAL WORK ORDERS -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+    <div>
+      <div style="font-size:17px;font-weight:800;color:var(--text)">Active Work Orders</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:2px">Upcoming, in progress, QC, completed, and closed jobs</div>
+    </div>
+    <div class="wo-filters" style="padding:0;border:none;background:none">
+      ${Object.entries(WOSTAT).filter(([k]) => k !== 'new').map(([k,v]) => `
+      <label class="wo-pill ${_woFilters.has(k)?'checked':''}" style="background:${WOSTAT_BG[k]};color:${WOSTAT_COLORS[k]}" onclick="toggleWOFilter('${k}')">
+        <span class="wo-pill-dot" style="background:${WOSTAT_COLORS[k]}"></span>
+        ${v}
+        <span style="background:${WOSTAT_COLORS[k]}22;padding:1px 6px;border-radius:8px;font-size:11px">${counts[k]||0}</span>
+      </label>`).join('')}
+      <button class="btn btn-ghost btn-xs" onclick="resetWOFilters()">Reset</button>
+    </div>
+  </div>
+  <div class="card">
+    ${activeWOs.length === 0
+      ? `<div class="empty" style="padding:36px 20px">
+          <div class="empty-ico">🔧</div>
+          <div class="empty-t">${WOS.filter(w=>w.woStatus!=='new').length===0 ? 'No active work orders yet' : 'No work orders match the selected filters'}</div>
+          <div class="empty-s">Move a New Work Order into Upcoming or In Progress to see it here.</div>
+        </div>`
+      : `${woTableHeader()}
+         <div>${activeWOs.map((w,i) => woRow(w,i)).join('')}</div>`}
+  </div>
+  <div id="prod-cal" style="margin-top:28px">${vProductionCalendar()}</div>`;
+}
+
+function toggleWOFilter(k) {
+  if (_woFilters.has(k)) {
+    // Keep at least one non-new filter active
+    const nonNewFilters = [..._woFilters].filter(f => f !== 'new');
+    if (nonNewFilters.length <= 1 && nonNewFilters[0] === k) return;
+    _woFilters.delete(k);
+  } else {
+    _woFilters.add(k);
+  }
+  const el = document.getElementById('content');
+  el.innerHTML = `<div class="page-hd"><h1>Production</h1><p>Manage active jobs and track work orders from estimate to payment.</p></div>` + vProduction();
+}
+
+function resetWOFilters() {
+  _woFilters = new Set(Object.keys(WOSTAT));
+  const el = document.getElementById('content');
+  el.innerHTML = `<div class="page-hd"><h1>Production</h1><p>Manage active jobs and track work orders from estimate to payment.</p></div>` + vProduction();
+}
+
+function openWOModal(id) {
+  const w = id ? getWorkOrder(id) : null;
+  const customers = getCustomers();
+  document.getElementById('modal-root').innerHTML = `
+  <div class="modal-ov" onclick="if(event.target===this)closeModal()">
+  <div class="modal modal-lg">
+    <div class="mh">
+      <div class="mt">${w ? 'Edit Work Order' : 'New Work Order'}</div>
+      <button class="mc" onclick="closeModal()">✕</button>
+    </div>
+    <div class="mb">
+      <div class="fg2">
+        <div class="fg fw"><label>Job Title *</label><input type="text" id="wf-title" value="${w?.title||''}" placeholder="e.g. Full Interior Repaint — Johnson"></div>
+        <div class="fg"><label>Customer</label>
+          <select id="wf-cid">
+            <option value="">— Select Customer —</option>
+            ${customers.map(c=>`<option value="${c.id}" ${w?.customerId===c.id?'selected':''}>${c.name}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg"><label>Status</label>
+          <select id="wf-stat">
+            ${Object.entries(WOSTAT).map(([k,v])=>`<option value="${k}" ${(w?.woStatus||'new')===k?'selected':''}>${v}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg"><label>Scheduled Date</label><input type="date" id="wf-date" value="${w?.scheduledDate||''}"></div>
+        <div class="fg"><label>Assigned To</label><input type="text" id="wf-assign" value="${w?.assignedTo||''}" placeholder="Crew name or lead painter"></div>
+        <div class="fg"><label>Job Value ($)</label><input type="number" id="wf-total" value="${w?.total||''}" placeholder="0.00" min="0" step="0.01"></div>
+        <div class="fg fw"><label>Notes</label><textarea id="wf-notes" placeholder="Special instructions, color codes, access info...">${w?.notes||''}</textarea></div>
+      </div>
+      ${w?.estimateId ? `<div style="margin-top:12px;padding:11px 14px;background:var(--grn-light);border-radius:var(--rs);font-size:13px;color:var(--grn);font-weight:500">🔗 Linked to estimate — <strong>${getEstimate(w.estimateId)?.title||'an estimate'}</strong></div>` : ''}
+    </div>
+    <div class="mf">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveWO('${id||''}')">${w ? '💾 Save Changes' : '＋ Create Work Order'}</button>
+    </div>
+  </div></div>`;
+}
+
+function saveWO(id) {
+  const title = document.getElementById('wf-title').value.trim();
+  if (!title) { alert('Job title is required.'); return; }
+  const d = {
+    title,
+    customerId: document.getElementById('wf-cid').value,
+    woStatus: document.getElementById('wf-stat').value,
+    scheduledDate: document.getElementById('wf-date').value,
+    assignedTo: document.getElementById('wf-assign').value.trim(),
+    total: parseFloat(document.getElementById('wf-total').value)||0,
+    notes: document.getElementById('wf-notes').value.trim()
+  };
+  if (id) updateWorkOrder(id, d); else addWorkOrder(d);
+  // Sync customer status if changing WO status to in_progress or further
+  if (['in_progress','quality_control','completed'].includes(d.woStatus)) {
+    const w = id ? getWorkOrder(id) : DB.workOrders[DB.workOrders.length-1];
+    if (w?.customerId) {
+      const c = getCustomer(w.customerId);
+      if (c && d.woStatus === 'in_progress' && !['job_in_progress','job_complete'].includes(c.status))
+        updateCustomer(c.id, { status:'job_in_progress' });
+      if (c && d.woStatus === 'completed' && c.status !== 'job_complete')
+        updateCustomer(c.id, { status:'job_complete' });
+    }
+  }
+  closeModal(); render();
+}
+
+function delWO(id) { confirmDialog('Delete this work order? This cannot be undone.', () => { deleteWorkOrder(id); render(); }); }
+
+// ═══════════════════════════════════════════════
+// FINANCE VIEW
+// ═══════════════════════════════════════════════
+let _finMonth = ''; // '' = all months
+let _finYear  = String(new Date().getFullYear());
+
+function vFinance() {
+  const now = new Date();
+  const curYear = now.getFullYear();
+  const years = [];
+  for (let y = curYear; y >= curYear - 4; y--) years.push(String(y));
+  const months = [
+    {v:'',l:'All Months'},{v:'1',l:'January'},{v:'2',l:'February'},{v:'3',l:'March'},
+    {v:'4',l:'April'},{v:'5',l:'May'},{v:'6',l:'June'},{v:'7',l:'July'},
+    {v:'8',l:'August'},{v:'9',l:'September'},{v:'10',l:'October'},{v:'11',l:'November'},{v:'12',l:'December'}
+  ];
+
+  // Classify estimates
+  const ACTIVE_CUST_STATUSES = ['job_won','job_in_progress','job_complete','closed'];
+  const allEst = getEstimates();
+
+  function matchesPeriod(e) {
+    const d = new Date(e.createdAt);
+    const yearMatch = String(d.getFullYear()) === _finYear;
+    const monthMatch = !_finMonth || String(d.getMonth()+1) === _finMonth;
+    return yearMatch && monthMatch;
+  }
+
+  const pending = allEst.filter(e => {
+    const c = getCustomer(e.customerId);
+    const cStatus = c?.status || '';
+    return matchesPeriod(e) && !ACTIVE_CUST_STATUSES.includes(cStatus);
+  });
+
+  const active = allEst.filter(e => {
+    const c = getCustomer(e.customerId);
+    const cStatus = c?.status || '';
+    return matchesPeriod(e) && ACTIVE_CUST_STATUSES.includes(cStatus);
+  });
+
+  // Stat calcs
+  function sumGroup(arr) {
+    let rev=0, cost=0;
+    arr.forEach(e => {
+      const p = estProfit(e);
+      rev  += p.rev;
+      cost += p.cost;
+    });
+    return { rev, cost, gp: rev-cost };
+  }
+  const pS = sumGroup(pending), aS = sumGroup(active);
+  const totalRev = pS.rev + aS.rev;
+  const totalGP  = pS.gp  + aS.gp;
+  const blended  = totalRev > 0 ? totalGP/totalRev*100 : null;
+
+  // Payments in period
+  const allPays = getPayments().filter(p => {
+    if (!p.date) return false;
+    const yr = p.date.slice(0,4);
+    const mo = String(parseInt(p.date.slice(5,7))); 
+    return yr === _finYear && (!_finMonth || mo === _finMonth);
+  });
+  const totalCollected = allPays.reduce((s,p) => s+(p.amount||0), 0);
+  const totalBilledAll = [...pending,...active].reduce((s,e) => s+(e.total||0), 0);
+  const outstanding    = totalBilledAll - totalCollected;
+
+  const periodLabel = _finMonth
+    ? `${months.find(m=>m.v===_finMonth)?.l} ${_finYear}`
+    : _finYear;
+
+  return `
+  <!-- FILTER ROW -->
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+    <div style="font-size:13px;font-weight:600;color:var(--muted)">Period:</div>
+    <select class="fsel" onchange="_finMonth=this.value;rerenderFinance()" style="min-width:140px">
+      ${months.map(m=>`<option value="${m.v}" ${_finMonth===m.v?'selected':''}>${m.l}</option>`).join('')}
+    </select>
+    <select class="fsel" onchange="_finYear=this.value;rerenderFinance()" style="min-width:90px">
+      ${years.map(y=>`<option value="${y}" ${_finYear===y?'selected':''}>${y}</option>`).join('')}
+    </select>
+    <div style="font-size:13px;color:var(--muted);margin-left:4px">Showing: <strong style="color:var(--text)">${periodLabel}</strong></div>
+  </div>
+
+  <!-- SUMMARY STAT CARDS -->
+  <div class="stats-grid" style="margin-bottom:22px">
+    <div class="stat-card dark">
+      <div class="stat-card-top"><div class="stat-label">Total Revenue</div></div>
+      <div class="stat-val" style="font-size:26px;letter-spacing:-1px">${$c(totalRev)}</div>
+      <div class="stat-sub">${pending.length + active.length} estimates</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-hatch"></div>
+      <div class="stat-card-top"><div class="stat-label">Collected</div></div>
+      <div class="stat-val" style="font-size:24px;letter-spacing:-1px;color:var(--grn)">${$c(totalCollected)}</div>
+      <div class="stat-sub light">${allPays.length} payment${allPays.length!==1?'s':''} this period</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-hatch"></div>
+      <div class="stat-card-top"><div class="stat-label">Outstanding Balance</div></div>
+      <div class="stat-val" style="font-size:24px;letter-spacing:-1px;color:${outstanding>0?'#DC2626':'var(--grn)'}">${$c(outstanding)}</div>
+      <div class="stat-sub light">Billed but not yet paid</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-hatch"></div>
+      <div class="stat-card-top"><div class="stat-label">Active Projected Margin</div></div>
+      <div class="stat-val" style="font-size:26px;letter-spacing:-1px;color:${aS.gp>=0?'var(--grn)':'#DC2626'}">${aS.rev>0&&aS.cost>0?$c(aS.gp):'—'}</div>
+      <div class="stat-sub light">${aS.rev>0&&aS.cost>0?(aS.gp/aS.rev*100).toFixed(1)+'% margin':'Add costs for margin'}</div>
+    </div>
+  </div>
+
+  <!-- PAYMENTS THIS PERIOD -->
+  <div style="font-size:17px;font-weight:800;margin-bottom:6px">Payments Received</div>
+  <div style="font-size:13px;color:var(--muted);margin-bottom:12px">All payments recorded in this period</div>
+  <div class="card" style="margin-bottom:28px">
+    ${allPays.length===0
+      ? `<div class="empty" style="padding:28px"><div class="empty-ico">💳</div><div class="empty-t">No payments in this period</div><div class="empty-s">Record payments from a customer's profile under the Payments tab.</div></div>`
+      : `<div class="tbl-wrap"><table>
+          <thead><tr><th>Customer</th><th>Linked Estimate</th><th>Method</th><th>Reference</th><th>Date</th><th style="text-align:right">Amount</th></tr></thead>
+          <tbody>${[...allPays].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(p=>{
+            const cust = getCustomer(p.customerId);
+            const est  = getEstimate(p.estimateId);
+            const METHODS = { check:'Check', cash:'Cash', credit_card:'Credit Card', bank_transfer:'Bank Transfer', venmo:'Venmo', zelle:'Zelle', other:'Other' };
+            return `<tr onclick="${cust?`navigate('customer','${cust.id}')`:'void(0)'}">
+              <td class="tn">${cust?.name||'—'}</td>
+              <td style="color:var(--muted);font-size:13px">${est?.title||'—'}</td>
+              <td>${METHODS[p.method]||p.method}</td>
+              <td style="color:var(--muted);font-size:13px">${p.reference||'—'}</td>
+              <td>${fdate(new Date(p.date+'T12:00:00').getTime())}</td>
+              <td style="font-weight:700;text-align:right;color:var(--grn)">${$c(p.amount)}</td>
+            </tr>`;
+          }).join('')}</tbody>
+          <tfoot><tr>
+            <td colspan="5" style="padding:12px 18px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;background:var(--bg);border-top:2px solid var(--border)">Period Total</td>
+            <td style="padding:12px 18px;font-weight:800;font-size:14px;background:var(--bg);border-top:2px solid var(--border);text-align:right;color:var(--grn)">${$c(totalCollected)}</td>
+          </tr></tfoot>
+        </table></div>`}
+  </div>
+
+  <!-- PENDING ESTIMATES -->
+  <div style="font-size:17px;font-weight:800;margin-bottom:6px">Pending Estimates</div>
+  <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Estimates where the customer has not yet moved to Job Won or later</div>
+  <div class="card" style="margin-bottom:28px">${finEstTable(pending)}</div>
+
+  <!-- ACTIVE ESTIMATES -->
+  <div style="font-size:17px;font-weight:800;margin-bottom:6px">Active Estimates</div>
+  <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Estimates linked to customers with status Job Won or beyond</div>
+  <div class="card">${finEstTable(active)}</div>`;
+}
+
+function finEstTable(arr) {
+  const MONTHS = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  if (!arr.length) return `<div class="empty" style="padding:32px"><div class="empty-ico">📄</div><div class="empty-t">No estimates</div><div class="empty-s">None match the selected period.</div></div>`;
+
+  const rows = arr.map(e => {
+    const c = getCustomer(e.customerId);
+    const lastName = c ? c.name.trim().split(' ').pop() : '';
+    const addrDisplay = c?.address
+      ? `${c.address} <span style="color:var(--muted);font-weight:400">(${lastName})</span>`
+      : c ? `<span style="color:var(--muted)">${c.name}</span>` : '—';
+    const { rev, cost, gp } = estProfit(e);
+    const gpPct = rev > 0 ? (gp/rev*100).toFixed(1) : null;
+    return { e, c, addrDisplay, rev, cost, gp, gpPct };
+  });
+
+  const totalRev  = rows.reduce((s,r)=>s+r.rev, 0);
+  const totalCost = rows.reduce((s,r)=>s+r.cost, 0);
+  const totalGP   = totalRev - totalCost;
+  const blended   = totalRev > 0 ? (totalGP/totalRev*100) : null;
+
+  return `<div class="tbl-wrap"><table>
+    <thead><tr><th>Title</th><th>Address</th><th>Status</th><th>Total</th><th>Gross Profit</th><th>Created</th><th></th></tr></thead>
+    <tbody>${rows.map(({e,c,addrDisplay,gp,gpPct})=>`<tr onclick="navigate('customer','${e.customerId||''}')">
+      <td class="tn">${e.title}</td>
+      <td><span style="cursor:pointer" onclick="navigate('customer','${c?.id||''}');event.stopPropagation()">${addrDisplay}</span></td>
+      <td>${c ? bdg(c.status) : '—'}</td>
+      <td style="font-weight:700">${$c(e.total)}</td>
+      <td>
+        <span style="font-weight:700;color:${gp>=0?'var(--grn)':'#DC2626'}">${$c(gp)}</span>
+        ${gpPct!==null?`<span style="font-size:11px;color:var(--muted);margin-left:5px">${gpPct}%</span>`:''}
+      </td>
+      <td>${fdate(e.createdAt)}</td>
+      <td><div style="display:flex;gap:4px" onclick="event.stopPropagation()">
+        <button class="btn btn-ghost btn-xs" title="Download PDF" onclick="downloadEstPDF('${e.id}')">⬇️</button>
+        <button class="btn btn-ghost btn-xs" onclick="openEditEst('${e.id}')">✏️</button>
+      </div></td>
+    </tr>`).join('')}</tbody>
+    <tfoot><tr>
+      <td colspan="3" style="padding:12px 18px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;background:var(--bg);border-top:2px solid var(--border)">${rows.length} estimate${rows.length!==1?'s':''} · Period Total</td>
+      <td style="padding:12px 18px;font-weight:800;font-size:14px;background:var(--bg);border-top:2px solid var(--border)">${$c(totalRev)}</td>
+      <td style="padding:12px 18px;background:var(--bg);border-top:2px solid var(--border)">
+        <span style="font-weight:800;font-size:14px;color:${totalGP>=0?'var(--grn)':'#DC2626'}">${$c(totalGP)}</span>
+        ${blended!==null?`<span style="font-size:11px;color:var(--muted);margin-left:5px">${blended.toFixed(1)}%</span>`:''}
+      </td>
+      <td colspan="2" style="background:var(--bg);border-top:2px solid var(--border)"></td>
+    </tr></tfoot>
+  </table></div>`;
+}
+
+function rerenderFinance() {
+  const el = document.getElementById('content');
+  el.innerHTML = `<div class="page-hd"><h1>Finance</h1><p>Review estimate revenue, gross profit, and projected earnings by period.</p></div>` + vFinance();
+}
+
+let mapMarkers = {}; // keyed by status → array of L.marker
+
+function vMap() {
+  const total = getCustomers().length;
+  const geo   = getCustomers().filter(c => c.lat).length;
+  const statuses = Object.keys(MAP_COLORS);
+  // count per status (only geocoded)
+  const counts = {};
+  statuses.forEach(k => counts[k] = getCustomers().filter(c => c.status===k && c.lat).length);
+
+  return `
+  <div style="display:grid;grid-template-columns:240px 1fr;gap:16px;align-items:start;height:calc(100vh - var(--hh) - 80px)">
+
+    <!-- FILTER PANEL -->
+    <div class="card" style="overflow:hidden;height:100%;display:flex;flex-direction:column">
+      <div class="ch" style="flex-shrink:0">
+        <div class="ct">Filter by Status</div>
+      </div>
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;gap:8px">
+        <button class="btn btn-secondary btn-xs" style="flex:1;justify-content:center" onclick="mapSelectAll(true)">All</button>
+        <button class="btn btn-secondary btn-xs" style="flex:1;justify-content:center" onclick="mapSelectAll(false)">None</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:8px 6px">
+        ${statuses.map(k => `
+        <label class="map-filter-row" for="mf-${k}">
+          <input type="checkbox" id="mf-${k}" data-status="${k}" checked onchange="applyMapFilter()">
+          <span class="map-filter-dot" style="background:${MAP_COLORS[k]}"></span>
+          <span class="map-filter-label">${CSTAT[k]}</span>
+          <span class="map-filter-count">${counts[k]}</span>
+        </label>`).join('')}
+      </div>
+      <div style="padding:12px 14px;border-top:1px solid var(--border);flex-shrink:0">
+        <div style="font-size:11.5px;color:var(--muted);text-align:center">${geo} of ${total} customers on map</div>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div id="map-cont" style="height:100%;border-radius:var(--r);overflow:hidden;border:1px solid var(--border)"></div>
+
+  </div>`;
+}
+
+function initMap() {
+  if (mapInst) { mapInst.remove(); mapInst = null; }
+  mapMarkers = {};
+  const el = document.getElementById('map-cont');
+  if (!el) return;
+
+  mapInst = L.map('map-cont').setView([39.8, -98.5], 4);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap'}).addTo(mapInst);
+
+  const pts = getCustomers().filter(c => c.lat && c.lng);
+  const bounds = [];
+
+  pts.forEach(c => {
+    const col = MAP_COLORS[c.status] || '#6B7280';
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="width:32px;height:32px;border-radius:50%;background:${col};border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;cursor:pointer;transition:transform .15s">${ini(c.name)}</div>`,
+      iconSize: [32, 32], iconAnchor: [16, 16]
+    });
+    const ES = getEstimates(c.id), tv = ES.reduce((s,e) => s+(e.total||0), 0);
+    const marker = L.marker([c.lat, c.lng], {icon}).bindPopup(`
+      <div style="font-family:sans-serif;min-width:200px;padding:4px">
+        <div style="font-weight:800;font-size:14px;margin-bottom:5px">${c.name}</div>
+        <div style="font-size:12.5px;color:#555;margin-bottom:4px">${c.address||''}<br>${[c.city,c.state,c.zip].filter(Boolean).join(', ')}</div>
+        ${c.phone?`<div style="font-size:12.5px;margin-bottom:6px">📞 ${c.phone}</div>`:''}
+        <div style="display:inline-block;padding:2px 9px;border-radius:10px;background:${col}22;color:${col};font-size:11.5px;font-weight:700;margin-bottom:8px">${CSTAT[c.status]}</div>
+        <div style="font-size:12px;color:#888;margin-bottom:8px">${ES.length} estimate(s) · ${$c(tv)}</div>
+        <button onclick="navigate('customer','${c.id}')" style="margin-top:2px;background:var(--grn,#1A5C38);color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:12.5px;font-weight:600;width:100%">View Profile →</button>
+      </div>`);
+    marker.addTo(mapInst);
+    if (!mapMarkers[c.status]) mapMarkers[c.status] = [];
+    mapMarkers[c.status].push(marker);
+    bounds.push([c.lat, c.lng]);
+  });
+
+  if (bounds.length) mapInst.fitBounds(bounds, {padding:[40,40]});
+}
+
+function applyMapFilter() {
+  document.querySelectorAll('[data-status]').forEach(cb => {
+    const status = cb.dataset.status;
+    const markers = mapMarkers[status] || [];
+    markers.forEach(m => {
+      if (cb.checked) { if (!mapInst.hasLayer(m)) m.addTo(mapInst); }
+      else            { if (mapInst.hasLayer(m))  mapInst.removeLayer(m); }
+    });
+  });
+}
+
+function mapSelectAll(checked) {
+  document.querySelectorAll('[data-status]').forEach(cb => { cb.checked = checked; });
+  applyMapFilter();
+}
+
+// ═══════════════════════════════════════════════
+// CUSTOMER MODAL
+// ═══════════════════════════════════════════════
+function openCustModal(id) {
+  const c = id ? getCustomer(id) : null;
+  document.getElementById('modal-root').innerHTML = `
+  <div class="modal-ov" onclick="if(event.target===this)closeModal()">
+  <div class="modal modal-lg">
+    <div class="mh"><div class="mt">${c?'Edit Customer':'Add New Lead'}</div><button class="mc" onclick="closeModal()">✕</button></div>
+    <div class="mb">
+      <div class="fg2">
+        <div class="fg fw"><label>Full Name *</label><input type="text" id="f-name" value="${c?.name||''}" placeholder="Jane Smith"></div>
+        <div class="fg"><label>Phone</label><input type="tel" id="f-phone" value="${c?.phone||''}" placeholder="(303) 555-0100"></div>
+        <div class="fg"><label>Email</label><input type="email" id="f-email" value="${c?.email||''}" placeholder="jane@email.com"></div>
+        <div class="fg fw"><label>Street Address</label><input type="text" id="f-addr" value="${c?.address||''}" placeholder="123 Elm Street"></div>
+        <div class="fg"><label>City</label><input type="text" id="f-city" value="${c?.city||''}" placeholder="Denver"></div>
+        <div class="fg" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end">
+          <div class="fg"><label>State</label><input type="text" id="f-state" value="${c?.state||''}" placeholder="CO"></div>
+          <div class="fg"><label>ZIP</label><input type="text" id="f-zip" value="${c?.zip||''}" placeholder="80203"></div>
+        </div>
+        <div class="fg"><label>Status</label><select id="f-stat">${Object.entries(CSTAT).map(([k,v])=>`<option value="${k}" ${(c?.status||'new_lead')===k?'selected':''}>${v}</option>`).join('')}</select></div>
+        <div class="fg"><label>Lead Source</label><select id="f-src"><option value="">— Select Source —</option>${Object.entries(SOURCES).map(([k,v])=>`<option value="${k}" ${c?.source===k?'selected':''}>${v}</option>`).join('')}</select></div>
+        <div class="fg fw"><label>Notes <span class="lopt">(optional)</span></label><textarea id="f-notes" placeholder="Job details, color preferences, special requirements...">${c?.notes||''}</textarea></div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCust('${id||''}')">${c?'💾 Save Changes':'＋ Add Lead'}</button>
+    </div>
+  </div></div>`;
+}
+function saveCust(id) {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { alert('Name is required.'); return; }
+  const d = { name, phone:document.getElementById('f-phone').value.trim(),
+    email:document.getElementById('f-email').value.trim(), address:document.getElementById('f-addr').value.trim(),
+    city:document.getElementById('f-city').value.trim(), state:document.getElementById('f-state').value.trim(),
+    zip:document.getElementById('f-zip').value.trim(), status:document.getElementById('f-stat').value,
+    source:document.getElementById('f-src').value, notes:document.getElementById('f-notes').value.trim() };
+  const old = id ? getCustomer(id) : null;
+  if (id) updateCustomer(id, d); else { const c = addCustomer(d); id = c.id; }
+  // Auto-create WOs if status changed to job_won
+  if (d.status === 'job_won' && old?.status !== 'job_won') syncWOsForCustomer(id);
+  closeModal(); render();
+}
+
+// ═══════════════════════════════════════════════
+// ESTIMATE MODAL
+// ═══════════════════════════════════════════════
+let _liCount = 0;
+function openEstModal(cid) { showEstModal(null, cid); }
+function openEditEst(id) { showEstModal(id, null); }
+function showEstModal(id, preCid) {
+  const e = id ? getEstimate(id) : null;
+  const defCid = preCid || e?.customerId || '';
+  const LI = e?.lineItems?.length ? e.lineItems : [{ description:'', qty:1, unit:'', unitPrice:0, total:0 }];
+  _liCount = LI.length;
+  document.getElementById('modal-root').innerHTML = `
+  <div class="modal-ov" onclick="if(event.target===this)closeModal()">
+  <div class="modal modal-lg">
+    <div class="mh"><div class="mt">${e?'Edit Estimate':'New Estimate'}</div><button class="mc" onclick="closeModal()">✕</button></div>
+    <div class="mb">
+      <div class="fg2">
+        <div class="fg fw"><label>Customer *</label><select id="ef-cid"><option value="">— Select Customer —</option>${getCustomers().map(c=>`<option value="${c.id}" ${c.id===defCid?'selected':''}>${c.name}</option>`).join('')}</select></div>
+        <div class="fg fw"><label>Estimate Title *</label><input type="text" id="ef-title" value="${e?.title||''}" placeholder="Interior Painting — Living Room & Hallway"></div>
+        <div class="fg fw"><label>Description <span class="lopt">(optional)</span></label><input type="text" id="ef-desc" value="${e?.description||''}" placeholder="Brief scope summary"></div>
+        <div class="fg"><label>Valid Until</label><input type="date" id="ef-valid" value="${e?.validUntil||''}"></div>
+        <div class="fg"><label>Tax Rate (%)</label><input type="number" id="ef-tax" value="${e?.taxRate||0}" min="0" max="100" step="0.1" oninput="calcTotals()"></div>
+      </div>
+      <hr class="divider">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div>
+          <div style="font-weight:700;font-size:14px">Line Items</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">🔒 <span style="color:#C2410C;font-weight:600">Cost</span> and <span style="color:#C2410C;font-weight:600">Margin</span> are internal only — hidden on customer PDF</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="addLI()">＋ Add Item</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 60px 70px 90px 70px 90px 90px 32px;gap:6px;margin-bottom:4px;padding:0 2px">
+        <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Description</span>
+        <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;text-align:center">Qty</span>
+        <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;text-align:center">Unit</span>
+        <span style="font-size:10px;font-weight:700;color:#C2410C;text-transform:uppercase;letter-spacing:.5px;text-align:right">Cost</span>
+        <span style="font-size:10px;font-weight:700;color:#C2410C;text-transform:uppercase;letter-spacing:.5px;text-align:center">Margin%</span>
+        <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;text-align:right">Unit Price</span>
+        <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;text-align:right">Total</span>
+        <span></span>
+      </div>
+      <div id="li-cont">${LI.map((li,i)=>liRow(li,i)).join('')}</div>
+      <div class="totals-box"><div class="totals-grid" id="ttls">${totalsHTML()}</div></div>
+      <hr class="divider">
+      <div class="fg"><label>Internal Notes</label><textarea id="ef-notes" placeholder="Internal notes, special instructions...">${e?.notes||''}</textarea></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEst('${id||''}')">${e?'💾 Save Changes':'＋ Create Estimate'}</button>
+    </div>
+  </div></div>`;
+  calcTotals();
+}
+
+function liRow(li, i) {
+  const margin = li.margin != null ? li.margin : 40;
+  // If no cost saved yet but unitPrice exists, back-calculate cost from the default margin
+  const hasCost = li.cost != null && li.cost > 0;
+  const cost = hasCost ? li.cost : (li.unitPrice > 0 ? li.unitPrice * (1 - margin / 100) : '');
+  // Price will be recomputed by calcTotals on load, so just seed it from unitPrice
+  const price = li.unitPrice || '';
+  return `<div class="li-row" id="li-${i}">
+    <input type="text" placeholder="e.g. Prep & paint master bedroom" value="${li.description||''}" oninput="calcTotals()" class="li-d">
+    <input type="number" value="${li.qty||1}" min="0" step="0.01" style="text-align:center" oninput="calcTotals()" class="li-q">
+    <input type="text" value="${li.unit||''}" placeholder="sq ft" style="text-align:center" class="li-u">
+    <input type="number" value="${cost !== '' ? Number(cost).toFixed(2) : ''}" placeholder="0.00" min="0" step="0.01" style="text-align:right" oninput="calcPriceFromMargin(${i});calcTotals()" class="li-cost">
+    <input type="number" value="${margin}" placeholder="%" min="0" max="100" step="0.1" style="text-align:center" oninput="calcPriceFromMargin(${i});calcTotals()" class="li-margin">
+    <input type="number" value="${price}" placeholder="0.00" min="0" step="0.01" style="text-align:right" oninput="calcTotals()" class="li-p">
+    <input type="number" value="${li.total||''}" readonly style="text-align:right;background:var(--bg);cursor:default" class="li-t">
+    <button onclick="removeLI(${i})" style="border:none;background:var(--bg);cursor:pointer;font-size:14px;color:var(--muted);border-radius:6px;height:36px;display:flex;align-items:center;justify-content:center;padding:0 8px;width:32px">✕</button>
+  </div>`;
+}
+
+function calcPriceFromMargin(i) {
+  const row = document.getElementById('li-' + i);
+  if (!row) return;
+  const cost   = parseFloat(row.querySelector('.li-cost')?.value) || 0;
+  const margin = parseFloat(row.querySelector('.li-margin')?.value);
+  if (!isNaN(margin) && margin >= 0 && margin < 100 && cost > 0) {
+    const price = cost / (1 - margin / 100);
+    const priceInput = row.querySelector('.li-p');
+    if (priceInput) priceInput.value = price.toFixed(2);
+  }
+}
+
+function totalsHTML() {
+  const rows = document.querySelectorAll('.li-row');
+  let sub = 0, totalCost = 0;
+  rows.forEach(r => {
+    const q    = parseFloat(r.querySelector('.li-q')?.value)||0;
+    const p    = parseFloat(r.querySelector('.li-p')?.value)||0;
+    const cost = parseFloat(r.querySelector('.li-cost')?.value)||0;
+    sub += q * p;
+    totalCost += q * cost;
+  });
+  const tr = parseFloat(document.getElementById('ef-tax')?.value)||0;
+  const tax = sub*(tr/100), total = sub+tax;
+  const profit = sub - totalCost;
+  const blendedMargin = sub > 0 ? (profit / sub * 100) : 0;
+  return `
+    <span style="color:var(--muted)">Subtotal</span><span style="font-weight:600;text-align:right">${$c(sub)}</span>
+    <span style="color:var(--muted)">Tax (${tr}%)</span><span style="font-weight:600;text-align:right">${$c(tax)}</span>
+    <span style="font-weight:800;font-size:15px">Total</span><span style="font-weight:800;font-size:15px;color:var(--grn);text-align:right">${$c(total)}</span>
+    ${totalCost>0?`<span style="color:#C2410C;font-size:11px;margin-top:6px;padding-top:6px;border-top:1px dashed #FDD9B5">🔒 Total Cost</span><span style="font-weight:600;text-align:right;color:#C2410C;font-size:11px;margin-top:6px;padding-top:6px;border-top:1px dashed #FDD9B5">${$c(totalCost)}</span>
+    <span style="color:#C2410C;font-size:11px">🔒 Gross Profit</span><span style="font-weight:700;text-align:right;color:#C2410C;font-size:11px">${$c(profit)} (${blendedMargin.toFixed(1)}%)</span>`:''}`;
+}
+
+function calcTotals() {
+  // First: apply margin → price for every row with a cost value
+  document.querySelectorAll('.li-row').forEach(r => {
+    const cost   = parseFloat(r.querySelector('.li-cost')?.value) || 0;
+    const margin = parseFloat(r.querySelector('.li-margin')?.value);
+    if (cost > 0 && !isNaN(margin) && margin >= 0 && margin < 100) {
+      const priceInput = r.querySelector('.li-p');
+      if (priceInput) priceInput.value = (cost / (1 - margin / 100)).toFixed(2);
+    }
+  });
+  // Second: compute qty × price → row total
+  document.querySelectorAll('.li-row').forEach(r => {
+    const q = parseFloat(r.querySelector('.li-q')?.value) || 0;
+    const p = parseFloat(r.querySelector('.li-p')?.value) || 0;
+    const t = r.querySelector('.li-t');
+    if (t) t.value = (q * p).toFixed(2);
+  });
+  const el = document.getElementById('ttls');
+  if (el) el.innerHTML = totalsHTML();
+}
+
+function addLI() {
+  const el=document.getElementById('li-cont');
+  const i=_liCount++;
+  const d=document.createElement('div');
+  d.innerHTML=liRow({description:'',qty:1,unit:'',cost:0,margin:40,unitPrice:0,total:0},i);
+  el.appendChild(d.firstElementChild);
+  calcTotals();
+}
+function removeLI(i) { const el=document.getElementById('li-'+i); if(el){el.remove();calcTotals();} }
+
+function saveEst(id) {
+  const cid = document.getElementById('ef-cid').value;
+  const title = document.getElementById('ef-title').value.trim();
+  if (!cid) { alert('Please select a customer.'); return; }
+  if (!title) { alert('Estimate title is required.'); return; }
+  const rows = document.querySelectorAll('.li-row');
+  const LI=[]; let sub=0;
+  rows.forEach(r=>{
+    const desc=r.querySelector('.li-d')?.value||'';
+    const qty=parseFloat(r.querySelector('.li-q')?.value)||0;
+    const unit=r.querySelector('.li-u')?.value||'';
+    const cost=parseFloat(r.querySelector('.li-cost')?.value)||0;
+    const margin=parseFloat(r.querySelector('.li-margin')?.value)||0;
+    const up=parseFloat(r.querySelector('.li-p')?.value)||0;
+    const tot=qty*up; sub+=tot;
+    if(desc||qty>0) LI.push({description:desc,qty,unit,cost,margin,unitPrice:up,total:tot});
+  });
+  const tr=parseFloat(document.getElementById('ef-tax')?.value)||0;
+  const tax=sub*(tr/100);
+  const d={customerId:cid,title,description:document.getElementById('ef-desc').value.trim(),
+    validUntil:document.getElementById('ef-valid').value,
+    notes:document.getElementById('ef-notes').value.trim(),lineItems:LI,subtotal:sub,taxRate:tr,tax,total:sub+tax};
+  if(id) updateEstimate(id,d); else addEstimate(d);
+  // Sync work order if customer is already job_won
+  const saved = id ? getEstimate(id) : DB.estimates[DB.estimates.length-1];
+  if (saved) syncWorkOrder(saved);
+  closeModal(); render();
+}
+
+// ═══════════════════════════════════════════════
+// PDF GENERATION
+// ═══════════════════════════════════════════════
+function downloadEstPDF(estId) {
+  const e = getEstimate(estId);
+  if (!e) return;
+  const c = getCustomer(e.customerId);
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'pt', format:'letter' });
+
+  const PW = 612, PH = 792;
+  const ML = 48, MR = 48, MT = 48;
+  const CW = PW - ML - MR; // 516
+  const GRN  = [26, 92, 56];
+  const DARK = [17, 24, 39];
+  const MID  = [75, 85, 99];
+  const LT   = [156, 163, 175];
+  const BORD = [229, 231, 235];
+  const GNLT = [232, 245, 238];
+
+  let y = MT;
+
+  // ── Header bar ──────────────────────────────
+  doc.setFillColor(...GRN);
+  doc.rect(0, 0, PW, 80, 'F');
+
+  // Company name
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(22);
+  doc.setTextColor(255,255,255);
+  doc.text('BrushPro Painting', ML, 34);
+
+  // Tagline
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10);
+  doc.setTextColor(200,230,212);
+  doc.text('Professional Painting Services', ML, 50);
+
+  // "ESTIMATE" label top right
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(26);
+  doc.setTextColor(255,255,255);
+  doc.text('ESTIMATE', PW - MR, 38, { align:'right' });
+
+  // Est number + date top right below
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9);
+  doc.setTextColor(200,230,212);
+  const estNum = `#${estId.slice(-6).toUpperCase()}`;
+  doc.text(`No. ${estNum}`, PW - MR, 52, { align:'right' });
+  doc.text(`Date: ${new Date(e.createdAt).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}`, PW - MR, 64, { align:'right' });
+
+  y = 100;
+
+  // ── Bill To / Estimate Details ───────────────
+  const col2X = ML + CW / 2 + 10;
+
+  // Bill To block
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...LT);
+  doc.text('BILL TO', ML, y);
+  doc.setTextColor(...DARK);
+  doc.setFontSize(12);
+  doc.setFont('helvetica','bold');
+  doc.text(c?.name || 'Customer', ML, y + 15);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10);
+  doc.setTextColor(...MID);
+  let addrY = y + 29;
+  if (c?.address) { doc.text(c.address, ML, addrY); addrY += 13; }
+  const cityLine = [c?.city, c?.state, c?.zip].filter(Boolean).join(', ');
+  if (cityLine) { doc.text(cityLine, ML, addrY); addrY += 13; }
+  if (c?.phone) { doc.text(c.phone, ML, addrY); addrY += 13; }
+  if (c?.email) { doc.text(c.email, ML, addrY); }
+
+  // Estimate details block (right side)
+  const detailsData = [
+    ['Estimate No.', estNum],
+    ['Date', new Date(e.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})],
+    ['Valid Until', e.validUntil || '30 days from issue'],
+    ['Status', c ? (CSTAT[c.status] || c.status) : 'N/A'],
+  ];
+  let dY = y;
+  detailsData.forEach(([label, val]) => {
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...LT);
+    doc.text(label.toUpperCase(), col2X, dY);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(10);
+    doc.setTextColor(...DARK);
+    doc.text(String(val), col2X, dY + 13);
+    dY += 30;
+  });
+
+  y = Math.max(addrY, dY) + 20;
+
+  // ── Job title / description ──────────────────
+  doc.setFillColor(...GNLT);
+  doc.roundedRect(ML, y, CW, e.description ? 46 : 30, 4, 4, 'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(13);
+  doc.setTextColor(...GRN);
+  doc.text(e.title, ML + 12, y + 18);
+  if (e.description) {
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(...MID);
+    doc.text(e.description, ML + 12, y + 34);
+  }
+  y += (e.description ? 46 : 30) + 16;
+
+  // ── Line items table ─────────────────────────
+  const hasItems = e.lineItems && e.lineItems.length > 0;
+  if (hasItems) {
+    const tableBody = e.lineItems.map(li => [
+      li.description || '',
+      `${li.qty || 1}${li.unit ? ' ' + li.unit : ''}`,
+      `$${(+li.unitPrice||0).toFixed(2)}`,
+      `$${(+li.total||0).toFixed(2)}`
+    ]); // cost & margin intentionally excluded from PDF
+
+    doc.autoTable({
+      startY: y,
+      head: [['Description', 'Qty / Unit', 'Unit Price', 'Amount']],
+      body: tableBody,
+      margin: { left: ML, right: MR },
+      styles: { font:'helvetica', fontSize:10, textColor:DARK, cellPadding:{top:9,bottom:9,left:10,right:10}, lineColor:BORD, lineWidth:0.5 },
+      headStyles: { fillColor:DARK, textColor:[255,255,255], fontStyle:'bold', fontSize:9, halign:'left' },
+      columnStyles: {
+        0: { cellWidth: 230 },
+        1: { cellWidth: 90, halign:'center' },
+        2: { cellWidth: 96, halign:'right' },
+        3: { cellWidth: 100, halign:'right', fontStyle:'bold' }
+      },
+      alternateRowStyles: { fillColor:[249,250,251] },
+      tableLineColor: BORD,
+      tableLineWidth: 0.5,
+    });
+    y = doc.lastAutoTable.finalY + 16;
+  }
+
+  // ── Totals box ───────────────────────────────
+  const tbW = 220, tbX = PW - MR - tbW;
+  const rows = [
+    ['Subtotal', $c(e.subtotal)],
+    ...(e.taxRate > 0 ? [[`Tax (${e.taxRate}%)`, $c(e.tax)]] : []),
+  ];
+  const rowH = 22;
+  const totH = rows.length * rowH + 36;
+
+  doc.setDrawColor(...BORD);
+  doc.setLineWidth(0.5);
+  doc.setFillColor(249,250,251);
+  doc.roundedRect(tbX, y, tbW, totH, 4, 4, 'FD');
+
+  let tY = y + 16;
+  rows.forEach(([label, val]) => {
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(10);
+    doc.setTextColor(...MID);
+    doc.text(label, tbX + 14, tY);
+    doc.text(val, tbX + tbW - 14, tY, { align:'right' });
+    tY += rowH;
+  });
+
+  // Total divider
+  doc.setDrawColor(...BORD);
+  doc.setLineWidth(0.5);
+  doc.line(tbX + 10, tY - 6, tbX + tbW - 10, tY - 6);
+
+  // Total row
+  doc.setFillColor(...GRN);
+  doc.roundedRect(tbX, tY - 4, tbW, 28, 0, 0, 'F');
+  doc.roundedRect(tbX, tY - 4, tbW, 28, 4, 4, 'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(12);
+  doc.setTextColor(255,255,255);
+  doc.text('TOTAL', tbX + 14, tY + 13);
+  doc.text($c(e.total), tbX + tbW - 14, tY + 13, { align:'right' });
+
+  y += totH + 24;
+
+  // ── Notes ────────────────────────────────────
+  if (e.notes && e.notes.trim()) {
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...LT);
+    doc.text('NOTES', ML, y);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(10);
+    doc.setTextColor(...MID);
+    const wrapped = doc.splitTextToSize(e.notes, CW);
+    doc.text(wrapped, ML, y + 14);
+    y += 14 + wrapped.length * 13 + 16;
+  }
+
+  // ── Terms & acceptance ───────────────────────
+  const terms = 'This estimate is valid for 30 days from the issue date unless otherwise noted. A 50% deposit is required to schedule the job. Remaining balance is due upon project completion. Prices may be subject to change if the scope of work changes.';
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...LT);
+  doc.text('TERMS & CONDITIONS', ML, y);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9);
+  doc.setTextColor(...LT);
+  const termsWrapped = doc.splitTextToSize(terms, CW);
+  doc.text(termsWrapped, ML, y + 12);
+  y += 12 + termsWrapped.length * 11 + 28;
+
+  // Acceptance signatures
+  if (y + 80 > PH - 60) { doc.addPage(); y = MT; }
+  doc.setDrawColor(...BORD);
+  doc.setLineWidth(0.5);
+  const sigW = (CW - 40) / 2;
+  doc.line(ML, y + 30, ML + sigW, y + 30);
+  doc.line(ML + sigW + 40, y + 30, ML + CW, y + 30);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...LT);
+  doc.text('Customer Signature & Date', ML, y + 42);
+  doc.text('Authorized by BrushPro', ML + sigW + 40, y + 42);
+  y += 60;
+
+  // ── Footer ───────────────────────────────────
+  doc.setFillColor(...GRN);
+  doc.rect(0, PH - 36, PW, 36, 'F');
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(200, 230, 212);
+  doc.text('BrushPro Painting  ·  Thank you for your business!', PW / 2, PH - 15, { align:'center' });
+
+  // ── File name ────────────────────────────────
+  const addrPart = (c?.address || c?.name || 'Estimate').replace(/[^a-zA-Z0-9\s]/g,'').trim().split(/\s+/).slice(0,4).join('-');
+  const fileName = `Estimate - ${addrPart}.pdf`;
+  doc.save(fileName);
+}
+
+function closeModal() { document.getElementById('modal-root').innerHTML=''; }
+
+// ═══════════════════════════════════════════════
+// PAYMENT MODAL
+// ═══════════════════════════════════════════════
+const PAY_METHODS = { check:'Check', cash:'Cash', credit_card:'Credit Card', bank_transfer:'Bank Transfer', venmo:'Venmo', zelle:'Zelle', other:'Other' };
+
+function openPaymentModal(cid, pid) {
+  const p  = pid ? getPayment(pid) : null;
+  const c  = getCustomer(cid);
+  const ES = getEstimates(cid);
+  const totalBilled = ES.reduce((s,e) => s+(e.total||0), 0);
+  const totalPaid   = getPayments(cid).filter(x=>x.id!==pid).reduce((s,x) => s+(x.amount||0), 0);
+  const balance     = totalBilled - totalPaid;
+  const today       = new Date().toISOString().slice(0,10);
+
+  document.getElementById('modal-root').innerHTML = `
+  <div class="modal-ov" onclick="if(event.target===this)closeModal()">
+  <div class="modal" style="max-width:520px">
+    <div class="mh">
+      <div class="mt">${p ? 'Edit Payment' : 'Record Payment'}</div>
+      <button class="mc" onclick="closeModal()">✕</button>
+    </div>
+    <div class="mb" style="padding:20px 24px">
+      ${c ? `<div style="background:var(--grn-light);border-radius:var(--rs);padding:10px 14px;margin-bottom:16px;display:flex;gap:14px">
+        <div><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Customer</div><div style="font-weight:700;font-size:13.5px">${c.name}</div></div>
+        <div><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Balance Due</div><div style="font-weight:800;font-size:13.5px;color:${balance>0?'#DC2626':'var(--grn)'}">${$c(balance)}</div></div>
+      </div>` : ''}
+      <div class="fg2">
+        <div class="fg"><label>Amount *</label>
+          <input type="number" id="pf-amount" value="${p?.amount||''}" placeholder="0.00" min="0" step="0.01" style="font-size:18px;font-weight:700">
+        </div>
+        <div class="fg"><label>Date *</label>
+          <input type="date" id="pf-date" value="${p?.date||today}">
+        </div>
+        <div class="fg"><label>Payment Method</label>
+          <select id="pf-method">
+            ${Object.entries(PAY_METHODS).map(([k,v])=>`<option value="${k}" ${(p?.method||'check')===k?'selected':''}>${v}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg"><label>Reference # <span class="lopt">(check #, transaction ID)</span></label>
+          <input type="text" id="pf-ref" value="${p?.reference||''}" placeholder="e.g. Check #1042">
+        </div>
+        <div class="fg fw"><label>Linked Estimate <span class="lopt">(optional)</span></label>
+          <select id="pf-est">
+            <option value="">— No specific estimate —</option>
+            ${ES.map(e=>`<option value="${e.id}" ${p?.estimateId===e.id?'selected':''}>${e.title} · ${$c(e.total)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg fw"><label>Notes <span class="lopt">(optional)</span></label>
+          <textarea id="pf-notes" placeholder="e.g. Deposit for job start, final payment, etc.">${p?.notes||''}</textarea>
+        </div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePayment('${cid}','${pid||''}')">
+        ${p ? '💾 Save Changes' : '✓ Record Payment'}
+      </button>
+    </div>
+  </div></div>`;
+}
+
+function savePayment(cid, pid) {
+  const amount = parseFloat(document.getElementById('pf-amount').value);
+  if (!amount || amount <= 0) { alert('Please enter a valid payment amount.'); return; }
+  const d = {
+    customerId: cid,
+    estimateId: document.getElementById('pf-est').value || null,
+    amount,
+    method:    document.getElementById('pf-method').value,
+    reference: document.getElementById('pf-ref').value.trim(),
+    date:      document.getElementById('pf-date').value,
+    notes:     document.getElementById('pf-notes').value.trim()
+  };
+  if (pid) updatePayment(pid, d); else addPayment(d);
+  closeModal(); render();
+}
+
+function delPaymentConfirm(pid) {
+  confirmDialog('Delete this payment record? This cannot be undone.', () => { deletePayment(pid); render(); });
+}
+
+function confirmDialog(msg, onYes) {
+  document.getElementById('modal-root').innerHTML = `
+  <div class="modal-ov" onclick="if(event.target===this)closeModal()">
+  <div class="modal" style="max-width:420px">
+    <div class="mh"><div class="mt">Confirm</div><button class="mc" onclick="closeModal()">✕</button></div>
+    <div class="mb" style="padding:22px 24px">
+      <p style="font-size:14px;color:var(--text);line-height:1.6">${msg}</p>
+    </div>
+    <div class="mf">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" onclick="closeModal();(${onYes.toString()})()">Delete</button>
+    </div>
+  </div></div>`;
+}
+
+function syncWOsForCustomer(cid) {
+  // When a customer is marked job_won, create WOs for all their estimates that don't have one yet
+  const estimates = getEstimates(cid);
+  estimates.forEach(e => {
+    if (!getWorkOrderByEstimate(e.id)) {
+      addWorkOrder({ estimateId:e.id, customerId:cid, title:e.title, total:e.total, woStatus:'new', notes:e.notes||'' });
+    }
+  });
+  // If no estimates exist, create a blank WO from the customer record
+  const c = getCustomer(cid);
+  const hasAnyWO = getWorkOrders().some(w => w.customerId === cid);
+  if (!hasAnyWO && c) {
+    addWorkOrder({ customerId:cid, title:`Job — ${c.name}`, total:0, woStatus:'new' });
+  }
+}
+
+function quickStat(id, v) {
+  const old = getCustomer(id);
+  updateCustomer(id, { status:v });
+  if (v === 'job_won' && old?.status !== 'job_won') syncWOsForCustomer(id);
+  render();
+}
+function setTab(t) { state.tab=t; render(); }
+function saveNotes(id) { const v=document.getElementById('n-'+id)?.value||''; updateCustomer(id,{notes:v}); }
+function delCust(id) {
+  const c=getCustomer(id); if(!c) return;
+  confirmDialog(`Delete <strong>${c.name}</strong>? All their estimates will also be deleted. This cannot be undone.`, () => { deleteCustomer(id); navigate('customers'); });
+}
+function delEst(id) { confirmDialog('Delete this estimate? This cannot be undone.', () => { deleteEstimate(id); render(); }); }
+function delFileConfirm(cid,fid) { confirmDialog('Delete this file? This cannot be undone.', () => { deleteFile(cid,fid); render(); }); }
+function dlFile(cid,fid) {
+  const c=getCustomer(cid); if(!c) return;
+  const f=c.files.find(f=>f.id===fid); if(!f) return;
+  const a=document.createElement('a'); a.href=f.data; a.download=f.name; a.click();
+}
+function handleInput(ev,cid) { processFiles(cid, ev.target.files); }
+function handleDrop(ev,cid) { ev.preventDefault(); ev.currentTarget.classList.remove('dragover'); processFiles(cid,ev.dataTransfer.files); }
+function processFiles(cid,files) {
+  Array.from(files).forEach(file=>{
+    if(file.size>5*1024*1024){ alert(`"${file.name}" exceeds the 5 MB limit.`); return; }
+    const r=new FileReader(); r.onload=e=>{addFile(cid,{name:file.name,type:file.type,size:file.size,data:e.target.result});render();};
+    r.readAsDataURL(file);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════
+function exportData() {
+  const blob = new Blob([JSON.stringify(DB, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `brushpro-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ═══════════════════════════════════════════════
+// SAMPLE DATA
+// ═══════════════════════════════════════════════
+function loadSamples() {
+  if (DB.customers.length>0) return;
+
+  const S=[
+    // ── Original 8 ──────────────────────────────────────────────────────────
+    {name:'Sarah Johnson',phone:'(720) 555-0142',email:'sarah.j@gmail.com',address:'1420 Vine St',city:'Denver',state:'CO',zip:'80206',status:'job_won',source:'referral',notes:'Full interior repaint. Prefers warm neutrals. Very easy to work with.',lat:39.7282,lng:-104.9609},
+    {name:'Mike & Linda Torres',phone:'(303) 555-0198',email:'mtorres@yahoo.com',address:'8834 Elmwood Dr',city:'Arvada',state:'CO',zip:'80005',status:'estimate_sent',source:'google',notes:'Exterior paint needed. Discussed power washing first.',lat:39.8028,lng:-105.0875},
+    {name:'Bob Hendricks',phone:'(720) 555-0321',email:'bhendricks@gmail.com',address:'2201 Sunset Blvd',city:'Boulder',state:'CO',zip:'80301',status:'new_lead',source:'nextdoor',notes:'Called in from yard sign on Sunset. Wants interior quote.',lat:40.0150,lng:-105.2705},
+    {name:'Westfield Properties LLC',phone:'(303) 555-0456',email:'ops@westfieldprop.com',address:'500 Market St',city:'Denver',state:'CO',zip:'80203',status:'job_won',source:'website',notes:'Commercial — 3 rental units need full repaint between tenants.',lat:39.7392,lng:-104.9903},
+    {name:'Karen Patel',phone:'(303) 555-0789',email:'kpatel@hotmail.com',address:'4567 Aspen Way',city:'Lakewood',state:'CO',zip:'80214',status:'job_complete',source:'repeat',notes:'Third job with us. Always pays promptly.',lat:39.7047,lng:-105.0814},
+    {name:'Dale Morrison',phone:'(720) 555-0654',email:'dmorrison@gmail.com',address:'9901 Pine Ridge Ct',city:'Thornton',state:'CO',zip:'80229',status:'job_lost',source:'yard_sign',notes:'Went with lower bid. Price was the deciding factor.',lat:39.8680,lng:-104.9719},
+    {name:'Emma Sanchez',phone:'(303) 555-0222',email:'emma.s@icloud.com',address:'123 Oak Lane',city:'Littleton',state:'CO',zip:'80120',status:'contacted',source:'facebook',notes:'Interested in kitchen + hallway refresh. Follow up Friday.',lat:39.6133,lng:-105.0166},
+    {name:'The Kowalski Family',phone:'(303) 555-0901',email:'kowalski.home@gmail.com',address:'7700 Cherry Creek Rd',city:'Aurora',state:'CO',zip:'80016',status:'job_in_progress',source:'referral',notes:'Large exterior job in progress. Scheduled 3-day crew.',lat:39.6461,lng:-104.8019},
+
+    // ── New 8 ────────────────────────────────────────────────────────────────
+    {name:'Riverside Dental Group',phone:'(720) 555-0477',email:'mgr@riversidedental.com',address:'3300 Speer Blvd',city:'Denver',state:'CO',zip:'80211',status:'job_in_progress',source:'google',notes:'Full commercial repaint — waiting room, 6 exam rooms, hallways. Open only on weekends.',lat:39.7527,lng:-105.0178},
+    {name:'Greg & Tanya Whitmore',phone:'(303) 555-0833',email:'gwhitmore@outlook.com',address:'614 Maple Ave',city:'Golden',state:'CO',zip:'80401',status:'estimate_sent',source:'referral',notes:'Victorian home exterior. Multiple colors requested. Need historic accuracy.',lat:39.7555,lng:-105.2211},
+    {name:'Alonzo Reyes',phone:'(720) 555-0199',email:'alonzo.r@yahoo.com',address:'2880 S Columbine St',city:'Denver',state:'CO',zip:'80210',status:'active_estimate',source:'nextdoor',notes:'Master bedroom + office + nursery. Baby due in May — timeline sensitive.',lat:39.6892,lng:-104.9601},
+    {name:'Highland Park HOA',phone:'(303) 555-0700',email:'admin@highlandparkhoa.org',address:'1 Highland Park Blvd',city:'Englewood',state:'CO',zip:'80110',status:'job_won',source:'website',notes:'Community clubhouse + 4 common area buildings. Recurring annual contract potential.',lat:39.6474,lng:-104.9878},
+    {name:'Patricia Nguyen',phone:'(720) 555-0388',email:'pnguyen@gmail.com',address:'5512 W 38th Ave',city:'Wheat Ridge',state:'CO',zip:'80033',status:'new_lead',source:'yelp',notes:'',lat:39.7656,lng:-105.0637},
+    {name:'Jackson & Flores Builders',phone:'(303) 555-0612',email:'bids@jacksonflores.com',address:'800 Industrial Way',city:'Broomfield',state:'CO',zip:'80021',status:'job_won',source:'referral',notes:'New construction — 12 townhomes need full paint package. Phase 1 of 3.',lat:39.9205,lng:-105.0866},
+    {name:'Cynthia Okafor',phone:'(720) 555-0544',email:'cokafor@hotmail.com',address:'991 S Birch St',city:'Denver',state:'CO',zip:'80246',status:'job_complete',source:'repeat',notes:'Second job — kitchen cabinets + laundry room. Loves our color consulting.',lat:39.7001,lng:-104.9402},
+    {name:'The Bergmann Estate',phone:'(303) 555-0922',email:'bergmann.estate@gmail.com',address:'4200 W Quincy Ave',city:'Sheridan',state:'CO',zip:'80110',status:'contacted',source:'google',notes:'5,400 sq ft luxury home full repaint inside and out. Will need full crew week.',lat:39.6471,lng:-105.0355},
+  ];
+
+  // Estimate templates keyed by customer name
+  const EST = {
+    'Sarah Johnson':[
+      {title:'Full Interior Repaint',tax:8,li:[
+        {description:'Benjamin Moore Regal Select — 14 gallons',qty:14,unit:'gal',unitPrice:68,total:952},
+        {description:'Primer coat — ceilings & walls',qty:2800,unit:'sq ft',unitPrice:.18,total:504},
+        {description:'Labor — prep, tape, paint 4 rooms',qty:24,unit:'hrs',unitPrice:65,total:1560},
+        {description:'Trim & baseboards',qty:1,unit:'job',unitPrice:420,total:420},
+      ]},
+    ],
+    'Mike & Linda Torres':[
+      {title:'Exterior Repaint & Prep',tax:8,li:[
+        {description:'Power wash entire exterior',qty:1,unit:'job',unitPrice:350,total:350},
+        {description:'Sherwin-Williams Duration — exterior grade',qty:8,unit:'gal',unitPrice:72,total:576},
+        {description:'2-coat application — siding',qty:2200,unit:'sq ft',unitPrice:.85,total:1870},
+        {description:'Garage door & shutters',qty:1,unit:'job',unitPrice:280,total:280},
+        {description:'Labor',qty:24,unit:'hrs',unitPrice:65,total:1560},
+      ]},
+    ],
+    'Westfield Properties LLC':[
+      {title:'3-Unit Commercial Interior',tax:8.5,li:[
+        {description:'Paint & supplies — per unit',qty:3,unit:'units',unitPrice:875,total:2625},
+        {description:'Drywall patch & repair',qty:1,unit:'job',unitPrice:480,total:480},
+        {description:'Labor — 2 crew, 3 days',qty:48,unit:'hrs',unitPrice:65,total:3120},
+        {description:'Clean-up & disposal',qty:1,unit:'job',unitPrice:150,total:150},
+      ]},
+      {title:'Unit 4 Touch-Up (Additional)',tax:8.5,li:[
+        {description:'Touch-up paint — scuffs & patches',qty:1,unit:'job',unitPrice:320,total:320},
+        {description:'Labor',qty:4,unit:'hrs',unitPrice:65,total:260},
+      ]},
+    ],
+    'Karen Patel':[
+      {title:'Bathroom & Hallway Refresh',tax:0,li:[
+        {description:'Sherwin-Williams Emerald — 4 gallons',qty:4,unit:'gal',unitPrice:72,total:288},
+        {description:'Labor — 2 bathrooms + hallway',qty:10,unit:'hrs',unitPrice:65,total:650},
+      ]},
+    ],
+    'The Kowalski Family':[
+      {title:'Full Exterior — Large Home',tax:8,li:[
+        {description:'Power wash & surface prep',qty:1,unit:'job',unitPrice:400,total:400},
+        {description:'Primer — bare wood & repairs',qty:3800,unit:'sq ft',unitPrice:.12,total:456},
+        {description:'2-coat exterior paint',qty:3800,unit:'sq ft',unitPrice:.75,total:2850},
+        {description:'Labor — 3-person crew',qty:40,unit:'hrs',unitPrice:65,total:2600},
+        {description:'Fascia, soffits & trim',qty:1,unit:'job',unitPrice:680,total:680},
+      ]},
+    ],
+    'Riverside Dental Group':[
+      {title:'Commercial Interior — Dental Office',tax:8.5,li:[
+        {description:'Low-VOC medical-grade paint — 20 gal',qty:20,unit:'gal',unitPrice:78,total:1560},
+        {description:'Waiting room & reception',qty:1,unit:'room',unitPrice:1200,total:1200},
+        {description:'6 exam rooms',qty:6,unit:'rooms',unitPrice:480,total:2880},
+        {description:'Hallways & break room',qty:1,unit:'job',unitPrice:640,total:640},
+        {description:'Weekend labor premium',qty:32,unit:'hrs',unitPrice:85,total:2720},
+      ]},
+    ],
+    'Greg & Tanya Whitmore':[
+      {title:'Victorian Exterior — Historic Colors',tax:8,li:[
+        {description:'Historic color research & consult',qty:2,unit:'hrs',unitPrice:95,total:190},
+        {description:'Power wash & caulking',qty:1,unit:'job',unitPrice:480,total:480},
+        {description:'Body color — 3 coats',qty:2600,unit:'sq ft',unitPrice:.92,total:2392},
+        {description:'Trim color — 5 accent colors',qty:1,unit:'job',unitPrice:1400,total:1400},
+        {description:'Porch floor & railings',qty:1,unit:'job',unitPrice:620,total:620},
+        {description:'Labor',qty:40,unit:'hrs',unitPrice:65,total:2600},
+      ]},
+    ],
+    'Alonzo Reyes':[
+      {title:'Interior 3-Room Package',tax:8,li:[
+        {description:'Master bedroom — walls & ceiling',qty:1,unit:'room',unitPrice:780,total:780},
+        {description:'Home office — accent wall + 3 walls',qty:1,unit:'room',unitPrice:640,total:640},
+        {description:'Nursery — specialized low-VOC paint',qty:1,unit:'room',unitPrice:580,total:580},
+        {description:'Materials allowance',qty:1,unit:'job',unitPrice:320,total:320},
+      ]},
+    ],
+    'Highland Park HOA':[
+      {title:'Clubhouse & Common Areas',tax:8.5,li:[
+        {description:'Clubhouse interior — full repaint',qty:4800,unit:'sq ft',unitPrice:.55,total:2640},
+        {description:'4 common area buildings — exterior',qty:1,unit:'job',unitPrice:3800,total:3800},
+        {description:'Fencing & trim',qty:1,unit:'job',unitPrice:920,total:920},
+        {description:'Labor — 4-person crew, 5 days',qty:80,unit:'hrs',unitPrice:65,total:5200},
+        {description:'Staging & equipment',qty:1,unit:'job',unitPrice:380,total:380},
+      ]},
+    ],
+    'Jackson & Flores Builders':[
+      {title:'Phase 1 — 12 Townhomes New Construction',tax:0,li:[
+        {description:'Interior paint package per unit',qty:12,unit:'units',unitPrice:2200,total:26400},
+        {description:'Exterior paint package per unit',qty:12,unit:'units',unitPrice:1800,total:21600},
+        {description:'Garage floors — epoxy coating',qty:12,unit:'units',unitPrice:380,total:4560},
+        {description:'Project management & scheduling',qty:1,unit:'job',unitPrice:1200,total:1200},
+      ]},
+      {title:'Phase 2 — 8 Townhomes (Pending)',tax:0,li:[
+        {description:'Interior package',qty:8,unit:'units',unitPrice:2200,total:17600},
+        {description:'Exterior package',qty:8,unit:'units',unitPrice:1800,total:14400},
+      ]},
+    ],
+    'Cynthia Okafor':[
+      {title:'Kitchen Cabinet Repaint & Laundry Room',tax:8,li:[
+        {description:'Cabinet spray paint — degloss, prime, 2 coats',qty:1,unit:'job',unitPrice:1800,total:1800},
+        {description:'Laundry room walls & ceiling',qty:1,unit:'room',unitPrice:420,total:420},
+        {description:'Hardware reinstall',qty:1,unit:'job',unitPrice:120,total:120},
+      ]},
+    ],
+    'The Bergmann Estate':[
+      {title:'Full Estate Repaint — Interior Walkthrough',tax:8,li:[
+        {description:'Interior — 14 rooms, paint & materials',qty:14,unit:'rooms',unitPrice:880,total:12320},
+        {description:'Exterior — 5,400 sq ft siding',qty:5400,unit:'sq ft',unitPrice:.9,total:4860},
+        {description:'Trim, railings & decorative elements',qty:1,unit:'job',unitPrice:2200,total:2200},
+        {description:'Full crew 7 days',qty:112,unit:'hrs',unitPrice:65,total:7280},
+      ]},
+    ],
+  };
+
+  S.forEach(s => {
+    const c = addCustomer(s);
+    const ests = EST[s.name] || [];
+    ests.forEach(ed => {
+      const sub = ed.li.reduce((acc,l) => acc+l.total, 0);
+      const tax = sub * ((ed.tax||0)/100);
+      const est = addEstimate({
+        customerId:c.id, title:ed.title,
+        lineItems:ed.li, subtotal:sub, taxRate:ed.tax||0, tax, total:sub+tax,
+        validUntil:'2026-06-30'
+      });
+      syncWorkOrder(est);
+    });
+  });
+
+  // ── Enrich work orders with realistic scheduling / crew data ──────────────
+  const byName = n => DB.customers.find(c=>c.name===n);
+  const woFor  = cid => DB.workOrders.find(w=>w.customerId===cid);
+
+  const enrichments = [
+    {name:'Sarah Johnson',        woStatus:'in_progress',  scheduledDate:'2026-04-02',assignedTo:'Carlos & Team A',notes:'Keys under mat. Dog named Biscuit — friendly.'},
+    {name:'Westfield Properties LLC',woStatus:'upcoming', scheduledDate:'2026-04-10',assignedTo:'Mike & Team B',notes:'Property manager contacts: Lisa (303-555-0400).'},
+    {name:'The Kowalski Family',  woStatus:'quality_control',scheduledDate:'2026-03-28',assignedTo:'Carlos & Team A',notes:'Final walk-through scheduled — check fascia on north side.'},
+    {name:'Karen Patel',          woStatus:'closed',       scheduledDate:'2026-03-01',assignedTo:'Carlos & Team A',notes:'Paid in full by check #4412.'},
+    {name:'Riverside Dental Group',woStatus:'in_progress',scheduledDate:'2026-03-29',assignedTo:'Mike & Team B',notes:'Weekend access only. Security code: 7741.'},
+    {name:'Highland Park HOA',    woStatus:'upcoming',     scheduledDate:'2026-04-14',assignedTo:'Team C — Jorge lead',notes:'Meet HOA board rep at 7am Day 1.'},
+    {name:'Jackson & Flores Builders',woStatus:'upcoming', scheduledDate:'2026-04-21',assignedTo:'Full crew — all teams',notes:'Foreman: Derek (720-555-0310). Phase 1 of 3.'},
+    {name:'Cynthia Okafor',       woStatus:'closed',       scheduledDate:'2026-02-18',assignedTo:'Carlos & Team A',notes:'Repeat customer. Left 5-star Google review.'},
+  ];
+
+  enrichments.forEach(({name, woStatus, scheduledDate, assignedTo, notes}) => {
+    const c = byName(name); if (!c) return;
+    const w = woFor(c.id);  if (!w) return;
+    updateWorkOrder(w.id, {woStatus, scheduledDate, assignedTo, notes});
+  });
+
+  // ── Kowalski & Karen already have WOs from approved estimates ──────────────
+  const bergmann = byName('The Bergmann Estate');
+  if (bergmann) addWorkOrder({customerId:bergmann.id, title:'Bergmann Estate — Pre-Job Site Visit', total:0, woStatus:'new', scheduledDate:'2026-04-05', assignedTo:'Unassigned', notes:'Walk through all 14 rooms, confirm color selections, measure exterior.'});
+
+  const patricia = byName('Patricia Nguyen');
+  if (patricia) addWorkOrder({customerId:patricia.id, title:'Nguyen — Initial Site Visit', total:0, woStatus:'new', notes:"New lead from Yelp. Hasn't confirmed scope yet."});
+
+  // ── Batch 2: 16 more customers ───────────────────────────────────────────
+  const S2 = [
+    {name:'Trent & Ashley Barlow',phone:'(720) 555-0134',email:'tbarlow@gmail.com',address:'330 Columbine St',city:'Denver',state:'CO',zip:'80206',status:'job_won',source:'referral',notes:'Full interior — 5 bed, 3 bath. Prefer Agreeable Gray palette.',lat:39.7310,lng:-104.9580},
+    {name:'Sunrise Montessori School',phone:'(303) 555-0281',email:'admin@sunrisemontessori.org',address:'1601 S Tennyson St',city:'Denver',state:'CO',zip:'80219',status:'job_in_progress',source:'google',notes:'Summer repaint during closure. Must finish before Aug 15.',lat:39.7001,lng:-105.0310},
+    {name:'Nadia Volkova',phone:'(720) 555-0467',email:'nvolkova@icloud.com',address:'780 S Vine St',city:'Denver',state:'CO',zip:'80209',status:'estimate_sent',source:'nextdoor',notes:'Wants bold navy kitchen + white trim throughout. Very particular.',lat:39.7015,lng:-104.9618},
+    {name:'Clearwater Realty Group',phone:'(303) 555-0590',email:'listings@clearwaterrealty.com',address:'4400 E Iliff Ave',city:'Denver',state:'CO',zip:'80222',status:'job_won',source:'repeat',notes:'Flip staging — 3 homes this quarter. Fast turnaround required.',lat:39.6780,lng:-104.9401},
+    {name:'Jerome & Patrice Hill',phone:'(303) 555-0743',email:'jhill@outlook.com',address:'11 Deer Creek Ct',city:'Littleton',state:'CO',zip:'80127',status:'contacted',source:'yard_sign',notes:'Saw our sign at neighbor\'s. Wants deck stain + exterior quote.',lat:39.5890,lng:-105.1200},
+    {name:'Fort Collins Brewing Co.',phone:'(970) 555-0132',email:'ops@fcbrewing.com',address:'262 S College Ave',city:'Fort Collins',state:'CO',zip:'80524',status:'active_estimate',source:'google',notes:'Taproom mural + bar area repaint. Industrial aesthetic.',lat:40.5853,lng:-105.0844},
+    {name:'Denise Castellano',phone:'(720) 555-0889',email:'dcastellano@yahoo.com',address:'2340 S Josephine St',city:'Denver',state:'CO',zip:'80210',status:'job_complete',source:'referral',notes:'Master suite + two kids rooms. Paid cash day of completion.',lat:39.6921,lng:-104.9594},
+    {name:'Apex Property Management',phone:'(303) 555-0330',email:'work@apexpm.co',address:'7890 E Hampden Ave',city:'Denver',state:'CO',zip:'80231',status:'job_won',source:'website',notes:'Portfolio of 8 rental units — ongoing quarterly contract.',lat:39.6501,lng:-104.8970},
+    {name:'Marcus Webb',phone:'(720) 555-0612',email:'mwebb@gmail.com',address:'5501 W 44th Ave',city:'Denver',state:'CO',zip:'80212',status:'new_lead',source:'facebook',notes:'Asked about garage floor epoxy + interior accent walls.',lat:39.7712,lng:-105.0560},
+    {name:'Summit Ridge HOA',phone:'(303) 555-0445',email:'board@summitridgehoa.com',address:'9000 Summit Ridge Blvd',city:'Parker',state:'CO',zip:'80138',status:'estimate_sent',source:'referral',notes:'Clubhouse + pool house + 6 mailbox kiosks. Bidding against 2 others.',lat:39.5186,lng:-104.7612},
+    {name:'Lori & Dan Espinoza',phone:'(303) 555-0917',email:'lespinoza@hotmail.com',address:'426 S Garfield St',city:'Denver',state:'CO',zip:'80209',status:'job_won',source:'repeat',notes:'4th job. Full exterior + fence stain. VIP — always refers friends.',lat:39.7022,lng:-104.9488},
+    {name:'Pinnacle Urgent Care',phone:'(720) 555-0255',email:'facilities@pinnacleuc.com',address:'1200 E Colfax Ave',city:'Denver',state:'CO',zip:'80218',status:'active_estimate',source:'google',notes:'3 clinic locations. Low-VOC required. Must work after hours.',lat:39.7400,lng:-104.9620},
+    {name:'Trevor Osman',phone:'(720) 555-0388',email:'tosman@icloud.com',address:'8820 Briarwood Ave',city:'Highlands Ranch',state:'CO',zip:'80126',status:'job_lost',source:'nextdoor',notes:'Lost to cheaper competitor. Followed up — no change.',lat:39.5511,lng:-104.9697},
+    {name:'The Castellucci Family',phone:'(303) 555-0762',email:'castellucci@gmail.com',address:'6610 S Ulster St',city:'Greenwood Village',state:'CO',zip:'80111',status:'contacted',source:'google',notes:'Luxury home — 6,200 sq ft. Requesting color consultation first.',lat:39.6220,lng:-104.8951},
+    {name:'Blue Sky Yoga Studio',phone:'(720) 555-0509',email:'hello@blueskyyoga.com',address:'3456 W 32nd Ave',city:'Denver',state:'CO',zip:'80211',status:'job_complete',source:'yelp',notes:'Serene palette — sage, cream, warm white. Done in 2 days.',lat:39.7530,lng:-105.0330},
+    {name:'Ryan & Kelsey Nakamura',phone:'(303) 555-0671',email:'rnakamura@gmail.com',address:'1880 S Fillmore St',city:'Denver',state:'CO',zip:'80210',status:'estimate_sent',source:'referral',notes:'New build touch-up + full basement finish. Builder-grade paint replacement.',lat:39.6955,lng:-104.9518},
+  ];
+
+  const EST2 = {
+    'Trent & Ashley Barlow':[
+      {title:'Full Interior — 5BR/3BA',tax:8,li:[
+        {description:'Benjamin Moore Agreeable Gray — 18 gal',qty:18,unit:'gal',unitPrice:68,total:1224},
+        {description:'Ceilings — flat white, all rooms',qty:4200,unit:'sq ft',unitPrice:.15,total:630},
+        {description:'Walls — 5 bedrooms + living areas',qty:1,unit:'job',unitPrice:2100,total:2100},
+        {description:'Trim, doors & baseboards',qty:1,unit:'job',unitPrice:880,total:880},
+        {description:'Labor — 3 crew, 3 days',qty:72,unit:'hrs',unitPrice:65,total:4680},
+      ]},
+    ],
+    'Sunrise Montessori School':[
+      {title:'Summer School Repaint',tax:8.5,li:[
+        {description:'Low-VOC classroom paint — 30 gal',qty:30,unit:'gal',unitPrice:74,total:2220},
+        {description:'8 classrooms — walls & ceilings',qty:8,unit:'rooms',unitPrice:680,total:5440},
+        {description:'Hallways & common areas',qty:1,unit:'job',unitPrice:1400,total:1400},
+        {description:'Gym floor line repaint',qty:1,unit:'job',unitPrice:620,total:620},
+        {description:'Labor',qty:56,unit:'hrs',unitPrice:65,total:3640},
+      ]},
+    ],
+    'Nadia Volkova':[
+      {title:'Kitchen Navy + Full Interior Trim',tax:8,li:[
+        {description:'Navy accent — kitchen walls, 2 coats',qty:1,unit:'room',unitPrice:740,total:740},
+        {description:'White trim throughout — doors, baseboards',qty:1,unit:'job',unitPrice:1200,total:1200},
+        {description:'Materials',qty:1,unit:'job',unitPrice:380,total:380},
+        {description:'Labor',qty:20,unit:'hrs',unitPrice:65,total:1300},
+      ]},
+    ],
+    'Clearwater Realty Group':[
+      {title:'Flip Package — 3 Homes Q2',tax:0,li:[
+        {description:'Standard flip interior per home',qty:3,unit:'homes',unitPrice:3200,total:9600},
+        {description:'Curb appeal exterior touch-up per home',qty:3,unit:'homes',unitPrice:1100,total:3300},
+        {description:'Rush scheduling premium',qty:1,unit:'job',unitPrice:600,total:600},
+      ]},
+    ],
+    'Fort Collins Brewing Co.':[
+      {title:'Taproom Repaint & Mural Prep',tax:8,li:[
+        {description:'Bar area & taproom walls',qty:2800,unit:'sq ft',unitPrice:.65,total:1820},
+        {description:'Mural wall surface prep & prime',qty:400,unit:'sq ft',unitPrice:.45,total:180},
+        {description:'Ceiling — exposed industrial gray',qty:2800,unit:'sq ft',unitPrice:.25,total:700},
+        {description:'Labor',qty:28,unit:'hrs',unitPrice:70,total:1960},
+      ]},
+    ],
+    'Denise Castellano':[
+      {title:'Master Suite & Kids Rooms',tax:8,li:[
+        {description:'Master bedroom — feature wall + 3 walls',qty:1,unit:'room',unitPrice:820,total:820},
+        {description:'Kids room #1 — themed accent colors',qty:1,unit:'room',unitPrice:580,total:580},
+        {description:'Kids room #2',qty:1,unit:'room',unitPrice:540,total:540},
+        {description:'Materials',qty:1,unit:'job',unitPrice:280,total:280},
+      ]},
+    ],
+    'Apex Property Management':[
+      {title:'Q2 Unit Refresh — 8 Rentals',tax:0,li:[
+        {description:'Standard turnover repaint per unit',qty:8,unit:'units',unitPrice:1400,total:11200},
+        {description:'Drywall repair per unit (avg)',qty:8,unit:'units',unitPrice:180,total:1440},
+        {description:'Coordination & scheduling fee',qty:1,unit:'job',unitPrice:400,total:400},
+      ]},
+    ],
+    'Summit Ridge HOA':[
+      {title:'HOA Common Areas — Clubhouse & Amenities',tax:8.5,li:[
+        {description:'Clubhouse interior',qty:3200,unit:'sq ft',unitPrice:.58,total:1856},
+        {description:'Pool house interior & exterior',qty:1,unit:'job',unitPrice:1800,total:1800},
+        {description:'6 mailbox kiosk structures',qty:6,unit:'units',unitPrice:180,total:1080},
+        {description:'Labor',qty:48,unit:'hrs',unitPrice:65,total:3120},
+      ]},
+    ],
+    'Lori & Dan Espinoza':[
+      {title:'Full Exterior + Fence Stain',tax:8,li:[
+        {description:'Power wash — house & fence',qty:1,unit:'job',unitPrice:380,total:380},
+        {description:'Exterior siding — 2 coats',qty:2800,unit:'sq ft',unitPrice:.88,total:2464},
+        {description:'Fence stain — cedar, 2 sides',qty:320,unit:'lin ft',unitPrice:4.5,total:1440},
+        {description:'Trim & shutters',qty:1,unit:'job',unitPrice:520,total:520},
+        {description:'Labor',qty:28,unit:'hrs',unitPrice:65,total:1820},
+      ]},
+    ],
+    'Pinnacle Urgent Care':[
+      {title:'3 Clinic Locations — After-Hours Package',tax:8.5,li:[
+        {description:'Waiting rooms — per location',qty:3,unit:'locations',unitPrice:1200,total:3600},
+        {description:'Exam rooms — 5 per location',qty:15,unit:'rooms',unitPrice:380,total:5700},
+        {description:'After-hours labor premium (1.5x)',qty:60,unit:'hrs',unitPrice:97.5,total:5850},
+        {description:'Low-VOC medical paint upcharge',qty:1,unit:'job',unitPrice:480,total:480},
+      ]},
+    ],
+    'Blue Sky Yoga Studio':[
+      {title:'Studio Refresh — Sage & Warm White',tax:8,li:[
+        {description:'Sage green — main studio walls',qty:1,unit:'room',unitPrice:880,total:880},
+        {description:'Warm white — lobby & changing rooms',qty:1,unit:'job',unitPrice:640,total:640},
+        {description:'Accent stripe — reception desk wall',qty:1,unit:'job',unitPrice:220,total:220},
+        {description:'Materials',qty:1,unit:'job',unitPrice:210,total:210},
+      ]},
+    ],
+    'Ryan & Kelsey Nakamura':[
+      {title:'Builder-Grade Replacement + Basement Finish',tax:8,li:[
+        {description:'Touch-up & repaint — main level',qty:2600,unit:'sq ft',unitPrice:.48,total:1248},
+        {description:'Basement walls & ceiling — full finish',qty:1400,unit:'sq ft',unitPrice:.72,total:1008},
+        {description:'Premium paint upgrade allowance',qty:1,unit:'job',unitPrice:420,total:420},
+        {description:'Labor',qty:24,unit:'hrs',unitPrice:65,total:1560},
+      ]},
+    ],
+  };
+
+  S2.forEach(s => {
+    const c = addCustomer(s);
+    const ests = EST2[s.name] || [];
+    ests.forEach(ed => {
+      const sub = ed.li.reduce((acc,l) => acc+l.total, 0);
+      const tax = sub * ((ed.tax||0)/100);
+      const est = addEstimate({
+        customerId:c.id, title:ed.title,
+        lineItems:ed.li, subtotal:sub, taxRate:ed.tax||0, tax, total:sub+tax,
+        validUntil:'2026-07-31'
+      });
+      syncWorkOrder(est);
+    });
+  });
+
+  // Enrich batch 2 WOs
+  const enrichments2 = [
+    {name:'Trent & Ashley Barlow',     woStatus:'upcoming',       scheduledDate:'2026-04-08',assignedTo:'Carlos & Team A',    notes:'Gate code: 2244. Park in driveway.'},
+    {name:'Sunrise Montessori School', woStatus:'upcoming',       scheduledDate:'2026-06-15',assignedTo:'Full crew',           notes:'Must complete before Aug 15 re-opening.'},
+    {name:'Clearwater Realty Group',   woStatus:'in_progress',    scheduledDate:'2026-03-31',assignedTo:'Mike & Team B',       notes:'Home 1 done. Home 2 in progress. Home 3 starts Mon.'},
+    {name:'Apex Property Management',  woStatus:'upcoming',       scheduledDate:'2026-04-18',assignedTo:'Team C — Jorge lead', notes:'Keys at office — pick up morning of. 8 unit keys labeled.'},
+    {name:'Lori & Dan Espinoza',       woStatus:'quality_control',scheduledDate:'2026-03-25',assignedTo:'Carlos & Team A',    notes:'Touch-up punch list — south fence rail needs second coat.'},
+    {name:'Denise Castellano',         woStatus:'closed',         scheduledDate:'2026-02-28',assignedTo:'Mike & Team B',      notes:'Cash payment received. 5-star review posted.'},
+    {name:'Blue Sky Yoga Studio',      woStatus:'closed',         scheduledDate:'2026-03-10',assignedTo:'Carlos & Team A',    notes:'Completed in 2 days. Owner very happy.'},
+  ];
+
+  enrichments2.forEach(({name, woStatus, scheduledDate, assignedTo, notes}) => {
+    const c = byName(name); if (!c) return;
+    const w = woFor(c.id);  if (!w) return;
+    updateWorkOrder(w.id, {woStatus, scheduledDate, assignedTo, notes});
+  });
+
+  // Manual WO for The Castellucci Family (contacted, no estimate yet)
+  const castellucci = byName('The Castellucci Family');
+  if (castellucci) addWorkOrder({customerId:castellucci.id, title:'Castellucci — Color Consultation Visit', total:0, woStatus:'new', scheduledDate:'2026-04-03', assignedTo:'Unassigned', notes:'6,200 sq ft luxury home. Bring full color fan deck and sample boards.'});
+}
+
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+loadDB();
+// Patch sample customers that are missing coords
+const SAMPLE_COORDS = {
+  'Sarah Johnson':             {lat:39.7282,lng:-104.9609},
+  'Mike & Linda Torres':       {lat:39.8028,lng:-105.0875},
+  'Bob Hendricks':             {lat:40.0150,lng:-105.2705},
+  'Westfield Properties LLC':  {lat:39.7392,lng:-104.9903},
+  'Karen Patel':               {lat:39.7047,lng:-105.0814},
+  'Dale Morrison':             {lat:39.8680,lng:-104.9719},
+  'Emma Sanchez':              {lat:39.6133,lng:-105.0166},
+  'The Kowalski Family':       {lat:39.6461,lng:-104.8019},
+  'Riverside Dental Group':    {lat:39.7527,lng:-105.0178},
+  'Greg & Tanya Whitmore':     {lat:39.7555,lng:-105.2211},
+  'Alonzo Reyes':              {lat:39.6892,lng:-104.9601},
+  'Highland Park HOA':         {lat:39.6474,lng:-104.9878},
+  'Patricia Nguyen':           {lat:39.7656,lng:-105.0637},
+  'Jackson & Flores Builders': {lat:39.9205,lng:-105.0866},
+  'Cynthia Okafor':            {lat:39.7001,lng:-104.9402},
+  'The Bergmann Estate':       {lat:39.6471,lng:-105.0355},
+  'Trent & Ashley Barlow':     {lat:39.7310,lng:-104.9580},
+  'Sunrise Montessori School': {lat:39.7001,lng:-105.0310},
+  'Nadia Volkova':             {lat:39.7015,lng:-104.9618},
+  'Clearwater Realty Group':   {lat:39.6780,lng:-104.9401},
+  'Jerome & Patrice Hill':     {lat:39.5890,lng:-105.1200},
+  'Fort Collins Brewing Co.':  {lat:40.5853,lng:-105.0844},
+  'Denise Castellano':         {lat:39.6921,lng:-104.9594},
+  'Apex Property Management':  {lat:39.6501,lng:-104.8970},
+  'Marcus Webb':               {lat:39.7712,lng:-105.0560},
+  'Summit Ridge HOA':          {lat:39.5186,lng:-104.7612},
+  'Lori & Dan Espinoza':       {lat:39.7022,lng:-104.9488},
+  'Pinnacle Urgent Care':      {lat:39.7400,lng:-104.9620},
+  'Trevor Osman':              {lat:39.5511,lng:-104.9697},
+  'The Castellucci Family':    {lat:39.6220,lng:-104.8951},
+  'Blue Sky Yoga Studio':      {lat:39.7530,lng:-105.0330},
+  'Ryan & Kelsey Nakamura':    {lat:39.6955,lng:-104.9518},
+};
+let patched = false;
+DB.customers.forEach(c => {
+  if (!c.lat && SAMPLE_COORDS[c.name]) {
+    c.lat = SAMPLE_COORDS[c.name].lat;
+    c.lng = SAMPLE_COORDS[c.name].lng;
+    patched = true;
+  }
+});
+if (patched) saveDB();
+loadSamples();
+navigate('dashboard');
+</script>
+</body>
+</html>
