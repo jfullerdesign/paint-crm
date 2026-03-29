@@ -28,7 +28,13 @@ html{font-size:16px}
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex}
 
 /* SIDEBAR */
-#sidebar{width:var(--sw);background:var(--surface);height:100vh;position:fixed;left:0;top:0;display:flex;flex-direction:column;z-index:100;border-right:1px solid var(--border)}
+#sidebar{width:var(--sw);background:var(--surface);height:100vh;position:fixed;left:0;top:0;display:flex;flex-direction:column;z-index:100;border-right:1px solid var(--border);transition:transform .22s ease,box-shadow .22s ease}
+#sidebar.collapsed{transform:translateX(calc(-1 * var(--sw)));box-shadow:none}
+#main{margin-left:var(--sw);flex:1;min-height:100vh;display:flex;flex-direction:column;transition:margin-left .22s ease}
+#main.sidebar-hidden{margin-left:0}
+.sidebar-toggle{position:fixed;top:16px;left:16px;z-index:200;width:36px;height:36px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .15s;box-shadow:var(--shadow)}
+.sidebar-toggle:hover{border-color:var(--grn);color:var(--grn)}
+#sidebar:not(.collapsed) ~ #main .sidebar-toggle{left:calc(var(--sw) + 16px)}
 .s-logo{padding:24px 18px 18px;border-bottom:1px solid var(--border)}
 .logo-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;position:relative}
 .logo-img-area{width:110px;height:110px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -53,8 +59,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .s-foot-btn:hover{background:rgba(255,255,255,.3)}
 
 /* MAIN */
-#main{margin-left:var(--sw);flex:1;min-height:100vh;display:flex;flex-direction:column}
-#topbar{height:var(--hh);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:50;gap:16px}
+
+#topbar{height:var(--hh);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px 0 64px;position:sticky;top:0;z-index:50;gap:16px;transition:padding .22s ease}
 .tb-search{flex:1;max-width:320px;display:flex;align-items:center;border:none;border-radius:10px;background:var(--bg);padding:0 12px;transition:border .15s}
 .tb-search:focus-within{border-color:var(--grn);background:#fff}
 .tb-search-ico{font-size:0.875rem;color:var(--light);flex-shrink:0;margin-right:10px;line-height:1}
@@ -384,6 +390,10 @@ textarea{resize:vertical;min-height:76px}
 </head>
 <body>
 
+<button class="sidebar-toggle" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar">
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+
 <aside id="sidebar">
   <div class="s-logo">
     <div class="logo-wrap">
@@ -440,7 +450,6 @@ textarea{resize:vertical;min-height:76px}
     <div class="s-foot-card">
       <div class="s-foot-t">All data saved locally</div>
       <div class="s-foot-s">No account needed. Your data stays on your device.</div>
-      <button class="s-foot-btn" onclick="exportData()"><svg viewBox="0 0 24 24" width="13px" height="13px" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Backup</button>
     </div>
   </div>
 </aside>
@@ -527,6 +536,16 @@ function maybeAutoBackup() {
   }
 }
 let DB = { customers: [], estimates: [], workOrders: [], payments: [], photoTags: ['Inspection','In Progress','Completion'], brand: { name:'BrushPro', sub:'Painting CRM' } };
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const main    = document.getElementById('main');
+  const btn     = document.getElementById('sidebar-toggle-btn');
+  const hidden  = sidebar.classList.toggle('collapsed');
+  main.classList.toggle('sidebar-hidden', hidden);
+  // Move toggle button: when sidebar is hidden sit at edge, when shown sit past sidebar
+  btn.style.left = hidden ? '16px' : 'calc(var(--sw) + 16px)';
+}
 
 function loadDB() {
   try { const r = localStorage.getItem(SK); if (r) DB = JSON.parse(r); } catch(e) {}
